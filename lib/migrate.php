@@ -41,6 +41,11 @@ function migrate(PDO $db, string $migrationsDir): array {
         }
 
         $sql = file_get_contents($file);
+        if ($sql === false) {
+            throw new RuntimeException(
+                "migration {$basename} failed: could not read file {$file}"
+            );
+        }
         $db->beginTransaction();
         try {
             $db->exec($sql);
