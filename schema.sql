@@ -1,3 +1,4 @@
+-- FROZEN BASELINE: do not edit. All schema changes go in migrations/. See .coda/designs/migrations-infra.md.
 CREATE TABLE staff (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
