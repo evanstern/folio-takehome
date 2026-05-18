@@ -1,18 +1,16 @@
 ---
 tags: [design, feature, readable-ids]
 description: Short readable document IDs that complement (do not replace) the hex share token mechanism.
-status: skeleton-awaiting-decision
+status: approved
 created: 2026-05-18
 updated: 2026-05-18
 ---
 
 # Design: readable IDs
 
-> **Status: SKELETON.** Body fills in once Evan locks
-> [[2026-05-18-1640-decision-readable-ids-complement]] from
-> `status: proposed` to `status: approved`. The shape below assumes
-> the proposed decision: readable IDs identify documents, hex share
-> tokens still gate recipient access.
+> **Status: APPROVED.** Locked in
+> [[2026-05-18-1640-decision-readable-ids-complement]] (session 2,
+> surfaced via focus card + skeleton, no objections).
 
 ## Problem
 
@@ -20,124 +18,160 @@ updated: 2026-05-18
 > something a person could say out loud, type into a URL, or paste into
 > an email. Examples: `welcome-2026`, `onboarding-packet-3k`, `FOLIO-7QX4`."
 
-The interesting calls: format, length, collision strategy, URL structure,
-and whether readable IDs **replace** or **complement** the existing hex
-share-token mechanism.
+The interesting calls: format, collision strategy, URL structure, and
+complement-vs-replace for share tokens.
 
-## Decisions in scope
+## Locked decisions
 
-Locked in [[2026-05-18-1640-decision-readable-ids-complement]] (subject
-to Evan's nod):
+From [[2026-05-18-1640-decision-readable-ids-complement]]:
 
-1. **Complement, not replace.** Readable IDs identify the document; the
+1. **Complement, not replace.** Readable IDs identify documents; the
    hex share token still gates recipient access.
-2. **Format:** `<slug-from-title>-<4-char-base32>`. Lowercase, hyphen-
-   separated slug from title; base32 suffix (no I/L/O/U) for collision
-   resistance and sayability.
+2. **Format:** `<slug>-<4-char-base32>`. Slug from title (lowercase,
+   non-alphanum → `-`, collapsed, ≤32 chars). Suffix is 4 chars from
+   the Crockford-ish alphabet `23456789abcdefghjkmnpqrstuvwxyz`
+   (no `0/1/i/l/o`, sayable + disambiguable).
 3. **URL structure:** `/d/<readable-id>?token=<hex>`. Document identity
    in the path, access token in the query string.
-4. **Migration backfills all existing rows.** No NULL readable_ids
-   anywhere — unique-not-null from the start.
+4. **Migration backfills all existing rows** before adding the UNIQUE
+   NOT NULL constraint. Two-step migration to sidestep SQLite's
+   ALTER-COLUMN limitations.
 
 ## Scope
 
-- [TBD on lock] Migration: `documents.readable_id TEXT UNIQUE NOT NULL`,
-  backfill existing rows with generated IDs
-- [TBD on lock] Helper function: `generate_readable_id($title): string`
-  in `lib/bootstrap.php` (or new file)
-- [TBD on lock] `admin.php` create form: generate readable_id on submit,
-  show in confirmation
-- [TBD on lock] `share.php`: build share URL from `readable_id`
-- [TBD on lock] `view.php`: resolve `?d=<readable-id>` (or path-segment
-  `/d/<readable-id>`) to document row before token check
-- [TBD on lock] Audit-log: `create` details includes `readable_id`
+Single feature session delivers:
+
+1. **Migration `migrations/0003_add_readable_id.sql`:**
+   ```sql
+   ALTER TABLE documents ADD COLUMN readable_id TEXT;
+   -- Backfill happens in PHP via the runner before the next migration.
+   ```
+2. **Migration `migrations/0004_readable_id_unique_notnull.sql`** —
+   added by the feature session AFTER it backfills existing rows in
+   PHP (in `seed.php` or via a one-shot script). The cleanest path:
+   the runner inserts backfill rows between migrations. Feature
+   session picks: either (a) two SQL migrations with PHP backfill in
+   `seed.php` between them, or (b) one SQL migration + UNIQUE INDEX
+   on the populated column. **Recommend (b)** — simpler:
+   ```sql
+   -- migrations/0004_readable_id_unique.sql
+   CREATE UNIQUE INDEX idx_documents_readable_id ON documents(readable_id);
+   ```
+   NOT NULL is enforced in PHP at insert time, not at the schema
+   level. Documented trade-off.
+3. **Helper `lib/readable_id.php`** exporting:
+   - `generate_readable_id(string $title): string` — slug + suffix
+   - `generate_readable_id_unique(PDO $db, string $title): string` —
+     retry on collision (up to 5 attempts, then throw)
+4. **`admin.php` create** generates a `readable_id` on insert.
+5. **`share.php`** builds the share URL using `readable_id` in the
+   path, hex token in the query.
+6. **`view.php`** accepts `/view.php?d=<readable-id>&token=<hex>`.
+   (URL rewriting to `/d/<rid>` is out of scope unless trivial in
+   the existing PHP `-S` setup — feature session decides.)
+7. **Backfill for seeded docs:** `seed.php` calls
+   `generate_readable_id_unique` for each seed doc after insert and
+   updates the row. Keeps seed deterministic-ish for tests.
+8. **Audit log:** `audit_log('create', 'document', $docId, [..., 'readable_id' => $rid])`
+   extends the existing create event.
+9. **Tests:** four per "Test plan."
+
+Out of scope:
+- Path-segment routing (`/d/<rid>`). Query-string form (`?d=<rid>`)
+  is functionally equivalent and doesn't require URL rewriting.
+- Renaming documents. `readable_id` is immutable post-creation.
+- Vanity IDs (user-chosen slugs).
 
 ## Schema impact
 
 ```sql
--- migrations/00X_add_readable_id.sql
+-- migrations/0003_add_readable_id.sql
 ALTER TABLE documents ADD COLUMN readable_id TEXT;
 
--- Backfill: PHP runs after this migration to generate readable_ids for
--- existing rows, then a second migration adds the UNIQUE NOT NULL constraint
--- (SQLite can't add UNIQUE NOT NULL with backfill in one step).
---
--- OR: do the backfill inline if we trust the SQLite version supports it.
--- Decision detail to lock when Evan approves.
+-- migrations/0004_readable_id_unique.sql
+CREATE UNIQUE INDEX idx_documents_readable_id ON documents(readable_id);
 ```
 
-SQLite-specific concern: adding `UNIQUE NOT NULL` to an existing column
-requires either (a) all rows already non-null + unique, or (b) the
-table-rebuild pipeline. Backfilling first then adding the constraint via
-a second migration sidesteps this.
+NOT NULL is enforced in PHP at insert time (`generate_readable_id_unique`
+always returns a non-empty string; INSERT statements always include the
+column). This avoids a table rebuild on existing data.
 
 ## Format spec
 
 ```
 <slug>-<suffix>
-slug:   first ~30 chars of lowercased title with non-alphanumeric → "-"
-        collapsed hyphens, trimmed of leading/trailing hyphens
-suffix: 4 chars from base32 alphabet excluding {I, L, O, U} for sayability
-        and disambiguation. ~28^4 ≈ 600K combinations per slug.
+slug:   first ≤32 chars of lowercased title, non-alphanum → '-',
+        collapsed runs of '-', trimmed of leading/trailing '-';
+        empty result → 'doc' (fallback)
+suffix: 4 chars from '23456789abcdefghjkmnpqrstuvwxyz' (30-char alphabet)
 ```
 
-Examples:
-- title `"Welcome Packet 2026"` → `welcome-packet-2026-7qx4`
-- title `"Q3 Onboarding"` → `q3-onboarding-3k7p`
-- title `""` (empty) → `doc-7qx4` (fallback slug)
+Collision space per slug: 30⁴ ≈ 810,000.
 
-Collision strategy: retry up to N times generating a new suffix. After N
-retries (extremely unlikely), raise.
+Examples:
+- `"Welcome to Folio"` → `welcome-to-folio-7qx4`
+- `"Q3 Onboarding Packet"` → `q3-onboarding-packet-3kma`
+- `""` → `doc-2bxv`
+
+Collision strategy: `generate_readable_id_unique` calls
+`generate_readable_id` then probes `documents.readable_id` for the
+result; retries up to 5 times with fresh suffixes; throws on persistent
+collision (statistically impossible but defensive).
 
 ## Audit-log impact
 
-`audit_log('create', 'document', $docId, ['title' => ..., 'readable_id' => $rid])`
-extends the existing details payload.
+Per [[2026-05-18-1600-pattern-audit-log]]:
 
-`audit_log('share', 'document', $docId, ['readable_id' => $rid, 'token' => ...])`
-on share-link generation (extends existing pattern).
+- `audit_log('create', 'document', $docId, ['title' => $title, 'readable_id' => $rid, 'publish_at' => $publishAtOrNull])`
+  on doc create — extends the existing payload with `readable_id`.
+
+No new audit action. Readable IDs are immutable; nothing to log on
+update.
 
 ## Test plan
 
-In `tests/test.php`:
+In `tests/test.php`, add:
 
-- `test('readable_id format')` — generate from known title, assert slug +
-  4-char suffix, no banned chars
-- `test('readable_id uniqueness')` — generate 1000 for same title, all
-  unique
-- `test('view.php resolves by readable_id')` — create doc, hit `/view.php?d=<rid>&token=<hex>`, assert document shown
-- `test('audit_log on create includes readable_id')`
+- `test('readable_id format')` — `generate_readable_id("Welcome to Folio")`
+  matches `/^welcome-to-folio-[2-9a-hj-np-z]{4}$/`
+- `test('readable_id uniqueness')` — generate 100 IDs for the same
+  title, all unique; insert N=10 of them into a fresh in-memory DB,
+  assert UNIQUE INDEX prevents a duplicate INSERT
+- `test('view.php resolves by readable_id')` — insert doc, hit
+  `view.php?d=<rid>&token=<hex>` via include, assert doc body in
+  response
+- `test('audit_log on create includes readable_id')` — create doc via
+  admin, query audit_log most-recent `create` row, assert details
+  JSON contains `readable_id` matching the generated format
 
 ## Rejected alternatives
 
-- **Replace integer IDs entirely with readable IDs.** Rejected:
-  readable IDs are guessable; share tokens are not. Removing the token
-  layer would change the privacy model. The complement design preserves
-  the existing security guarantee while adding the UX win.
-- **UUID v4 / nanoid.** Rejected: not human-sayable. `welcome-packet-7qx4`
-  is readable; `550e8400-e29b-41d4-a716-446655440000` is not.
-- **Pure slug from title (no suffix).** Rejected: collision risk. Two
-  docs both titled "Welcome" → conflict. Suffix is small UX cost,
-  meaningful guarantee.
-- **Format `FOLIO-7QX4`.** Rejected (vs `welcome-packet-7qx4`): loses
-  the title-derived context. Hard to scan in a list. The README example
-  is just an example — not prescriptive.
-- **Longer suffix (6-8 chars).** Rejected: 4 chars at ~28 alphabet is
-  600K per slug; we will never have 600K docs sharing a title.
-- **Numeric suffix.** Rejected: harder to say out loud than alpha.
+Captured in [[2026-05-18-1640-decision-readable-ids-complement]]:
+
+- **Replace share tokens entirely** — breaks privacy model
+- **UUID v4 / nanoid** — not human-sayable
+- **Pure slug, no suffix** — collision risk for duplicate titles
+- **`FOLIO-XXXX` style (no title context)** — loses scanability in a list
+- **Longer suffix (6-8 chars)** — sufficient space with 4 chars at
+  this scale (30⁴ ≈ 810K per slug)
+- **Numeric suffix** — harder to say out loud
+- **User-chosen IDs** — collision handling + UX scope out
 
 ## Video talking points
 
-- "Customers said 'short, readable, sayable.' I shipped a slug + 4-char
-  base32 suffix — readable, sayable, and collision-resistant without
-  going to UUID."
-- "The tricky call was complement vs replace. Replacing share tokens
-  with readable IDs would mean anyone who guesses or hears a readable ID
-  can read the doc. The complement design keeps the privacy model intact
-  while still giving customers what they asked for."
-- "I excluded I, L, O, U from the base32 alphabet — sayability and
-  disambiguation. `1` vs `l` vs `I` is a real bug source in URLs people
-  type from memory."
+- "Customers said 'short, readable, sayable.' I shipped slug + 4-char
+  base32. Readable, sayable, collision-resistant without going UUID."
+- "The privacy call was complement vs replace. Replacing share tokens
+  with readable IDs means anyone who guesses or hears a readable ID
+  can read the doc. The complement design preserves the existing
+  privacy guarantee while giving customers what they asked for."
+- "I excluded `0/1/i/l/o` from the alphabet — sayability and
+  disambiguation. `1` vs `l` vs `I` is a real bug source when people
+  type URLs from memory."
+- "I'm enforcing NOT NULL in PHP rather than at the schema level —
+  SQLite can't add NOT NULL to an existing column without a table
+  rebuild, and the enforcement at the call site is just as honest.
+  The UNIQUE INDEX catches duplicates at the database boundary."
 
 ## Related
 
@@ -147,5 +181,5 @@ In `tests/test.php`:
 - [[folio-share-page]]
 - [[folio-view-page]]
 - [[2026-05-18-1635-decision-scheduling-gates-content]] — readable-id
-  resolution happens BEFORE publish-at gate
-- Focus card #3
+  resolution happens BEFORE publish-at gate in view.php
+- Focus card #3 `readable-ids`

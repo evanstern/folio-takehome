@@ -80,10 +80,10 @@ When in doubt: date-prefix it.
 
 ### Decisions (civicplus's design calls, in creation order)
 - [[2026-05-18-1620-decision-coda-dir-shipped]] — `.coda/` ships in the submission (README invites it; orchestrator setup is part of the grade) — **approved**
-- [[2026-05-18-1630-decision-migrations-shape]] — numbered SQL files in `migrations/`, applied by tiny PHP runner via `seed.php`, tracked in `schema_migrations` — **proposed**
-- [[2026-05-18-1635-decision-scheduling-gates-content]] — scheduling gates *content visibility*, not document/ID existence — **proposed**
-- [[2026-05-18-1640-decision-readable-ids-complement]] — readable IDs identify documents; hex share tokens still gate recipient access — **proposed**
-- [[2026-05-18-1645-decision-search-like]] — server-side case-insensitive LIKE substring match on title; not FTS, not fuzzy — **proposed**
+- [[2026-05-18-1630-decision-migrations-shape]] — numbered SQL files in `migrations/`, applied by tiny PHP runner via `seed.php`, tracked in `schema_migrations` — **approved**
+- [[2026-05-18-1635-decision-scheduling-gates-content]] — scheduling gates *content visibility*, not document/ID existence; `FOLIO_TZ` configurable — **approved**
+- [[2026-05-18-1640-decision-readable-ids-complement]] — readable IDs identify documents; hex share tokens still gate recipient access — **approved**
+- [[2026-05-18-1645-decision-search-like]] — server-side case-insensitive LIKE substring match on title; not FTS, not fuzzy — **approved**
 - [[2026-05-18-1842-decision-port-configurable]] — host port via `FOLIO_PORT` in `.env`, default 8000 (pushback moment) — **approved**
 - [[2026-05-18-1848-decision-bare-layout]] — repo uses coda-lite bare layout: `.bare/` + sibling worktrees, `main/` is civicplus's home base — **approved**
 - [[2026-05-18-1851-decision-compose-project-name-pinned]] — `name: folio-takehome` pinned in `docker-compose.yml`, overridable per worktree via `COMPOSE_PROJECT_NAME` — **approved**
@@ -96,6 +96,7 @@ When in doubt: date-prefix it.
 - [[2026-05-18-1730-pattern-branching-worktrees]] — coda-lite bare layout + git worktrees per feature
 - [[2026-05-18-1735-pattern-focus-task-convention]] — focus cards link back to design docs; structure + lifecycle
 - [[2026-05-18-1740-pattern-collaboration-with-evan]] — peer-mode operation: propose with artifacts, wait for approval, surface proactively
+- [[2026-05-18-1928-pattern-punt-cards]] — when civicplus simplifies, log the rejected upgrade as a p3 backlog focus card so the "what we'd do with more time" beat has receipts
 
 ### Incidents / things to flag
 - [[flag-no-auth]] — `current_staff()` hardcodes id=1; no auth at all. Out of scope to fix, worth naming.

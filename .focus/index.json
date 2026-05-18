@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-18T23:11:07.520049195Z",
-  "next_id": 5,
+  "generated_at": "2026-05-18T23:29:46.980258934Z",
+  "next_id": 8,
   "cards": [
     {
       "id": 1,
@@ -46,6 +46,39 @@
       "project": "folio-takehome",
       "created": "2026-05-18",
       "dir": "cards/0004-search-by-name-case-insensitive-like-substring-on-title"
+    },
+    {
+      "id": 5,
+      "uuid": "019e3d6b-8b9e-7861-ab50-4c1c327f8643",
+      "title": "punt: multi-timezone support for scheduled publishing",
+      "type": "card",
+      "status": "backlog",
+      "priority": "p3",
+      "project": "folio-takehome",
+      "created": "2026-05-18",
+      "dir": "cards/0005-punt-multi-timezone-support-for-scheduled-publishing"
+    },
+    {
+      "id": 6,
+      "uuid": "019e3d6b-9175-76d1-96f2-de9a795f9b5c",
+      "title": "punt: FTS5 full-text search upgrade for search-by-name",
+      "type": "card",
+      "status": "backlog",
+      "priority": "p3",
+      "project": "folio-takehome",
+      "created": "2026-05-18",
+      "dir": "cards/0006-punt-fts5-full-text-search-upgrade-for-search-by-name"
+    },
+    {
+      "id": 7,
+      "uuid": "019e3d6b-a3fb-738d-a82f-53aadfe3b5a7",
+      "title": "punt: schedule edit UI for already-created documents",
+      "type": "card",
+      "status": "backlog",
+      "priority": "p3",
+      "project": "folio-takehome",
+      "created": "2026-05-18",
+      "dir": "cards/0007-punt-schedule-edit-ui-for-already-created-documents"
     }
   ]
 }

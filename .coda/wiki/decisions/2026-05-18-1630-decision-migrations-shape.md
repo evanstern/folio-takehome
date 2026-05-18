@@ -1,30 +1,29 @@
 ---
 tags: [decision, infrastructure, migrations]
 description: Numbered SQL files in migrations/, applied by tiny PHP runner via seed.php, tracked in schema_migrations
-status: proposed
+status: approved
 created: 2026-05-18
 updated: 2026-05-18
 ---
 
 # Decision: migrations shape
 
-> **Status: PROPOSED.** Pending Evan's review. Per [[2026-05-18-1740-pattern-collaboration-with-evan]],
-> civicplus does not finalize design decisions unilaterally.
+> **Status: APPROVED** by Evan (session 2, after librarian survey).
+> "A works." Option C explicitly noted as considered-and-rejected per
+> Evan's direction — not as showing-off but as "more than necessary
+> for this scope."
 
-## Open question (per PROJECT.md edit)
+## Research that informed this
 
-> "Are there PHP/SQLite specific migration tools/ORMs we should consider?
-> What is 'best practice'? What is 'overkill' for us?"
+Three librarian agents surveyed the PHP migration landscape in parallel:
+- Heavyweight tools: Phinx, Doctrine Migrations, Illuminate Database
+- Lightweight/raw-PDO patterns + `byjg/php-migration`
+- What real PHP+SQLite projects (KanBoard, Phoronix, OPodSync, FreshRSS,
+  Selfoss) actually do
 
-Before locking this decision, civicplus must:
-1. Spawn a librarian/explore agent to survey the PHP migration landscape
-   (Phinx, Doctrine Migrations, Laravel-style schema builder, raw-PDO patterns)
-2. Score each on: dependency weight (does it require Composer?),
-   readability for a reviewer, fit for SQLite specifically, time-to-integrate
-3. Surface findings + recommendation to Evan before finalizing
-
-The bespoke-runner approach below is civicplus's current best guess.
-The research may change it.
+Findings: all three converged on "don't use a heavyweight tool" for this
+scope (~380 LOC PHP, no Composer setup, ~3hr budget). They disagreed on
+what minimal looks like — three options surfaced (A, B, C below).
 
 ## Context
 
@@ -67,11 +66,74 @@ Runner: a small `lib/migrate.php` (≤30 LOC) that:
 
 ## Rejected alternatives
 
-- **Bake changes back into `schema.sql`.** README explicitly forbids this. Easy to forget the constraint, easy to lose.
+### Option B: `PRAGMA user_version` + inline PHP migrations
+
+Actually idiomatic for SQLite-native projects. Real production use:
+KanBoard, Phoronix Test Suite, OPodSync, WatchState, KaraDAV,
+DiskLocation. Pattern:
+
+```php
+$version = (int) $db->query('PRAGMA user_version')->fetchColumn();
+if ($version < 1) {
+    $db->exec('BEGIN');
+    $db->exec('ALTER TABLE documents ADD COLUMN publish_at TEXT NULL');
+    $db->exec('PRAGMA user_version = 1');
+    $db->exec('COMMIT');
+}
+if ($version < 2) { /* ... */ }
+```
+
+**Strengths:** ~30 LOC total. No extra tracking table. Atomic
+(version pragma is in the SQLite header). Demonstrates we looked at
+SQLite-native practice instead of cargo-culting ActiveRecord.
+
+**Why rejected (in favor of A):** migrations live in PHP, not
+greppable as `.sql` files. Reviewer running `ls migrations/` and
+reading three SQL files top-to-bottom understands the schema history
+in 5 seconds. Reading PHP to reconstruct it takes longer. Reviewer-
+clarity is the grading axis. Worth showing we considered it.
+
+### Option C: Hybrid — `.sql` files + `PRAGMA user_version` for tracking
+
+`.sql` files in `migrations/`, but the runner uses `PRAGMA user_version`
+instead of a `schema_migrations` table. Files named `0001_*.sql`,
+`0002_*.sql`; runner reads version, applies files numbered higher,
+bumps the pragma.
+
+**Strengths:** smallest schema footprint (no extra table) + reviewer
+can still grep `.sql` files. Best-of-both per Evan's framing.
+
+**Why rejected (in favor of A):** Evan's call: "may be more than is
+necessary." The bespoke `schema_migrations` table is a tiny amount
+of "visible" tracking — a reviewer running `SELECT * FROM
+schema_migrations` immediately sees what's applied and when. The
+hybrid approach saves one table at the cost of a bit more cleverness
+in the runner. For a 3-hour exercise where simplicity is the message,
+the explicit table wins. **Worth mentioning in the video that we
+considered the hybrid and chose against it deliberately.**
+
+### Heavyweight tools (Phinx, Doctrine Migrations, Illuminate Database)
+
+All rejected as overkill:
+- **Phinx** (least-bad): ~10 transitive Composer deps, SQLite-native,
+  fluent + raw-SQL support. Still overkill for ~380 LOC PHP.
+- **Doctrine Migrations**: ~15-20 deps, enterprise-shaped.
+- **Illuminate Database**: PHP 8.3+, ~20-25 deps, requires bootstrap
+  capsule.
+
+None of the three real PHP+SQLite production projects we surveyed
+use Phinx. It's designed for MySQL/PostgreSQL contexts. Adding any
+of them requires introducing Composer to a repo that doesn't have
+it — that itself is a meaningful change to the deliverable.
+
+### Smaller rejected alternatives
+
+- **Bake changes back into `schema.sql`.** README explicitly forbids this.
 - **PHP migration files instead of SQL.** Overkill for this codebase. Adds a syntax decision and a class hierarchy for no payoff. SQLite's `executescript` handles multi-statement SQL fine.
-- **A "real" migration tool (Phinx, Doctrine).** Composer is not set up. Adding a dependency manager for one feature is way out of scope. Build the smallest thing that's right.
 - **Up + down migrations.** Down migrations are theater in a SQLite + take-home context. Forward-only.
 - **Runtime migrations at first PDO connect.** Tempting (no `seed.php` edit needed), but it hides the apply step from review and complicates `tests/test.php`. Explicit in `seed.php` is honest.
+- **`byjg/php-migration`.** Real package, 165 stars, SQLite-capable. Requires Composer. Same "introduce a dependency manager for one feature" objection as Phinx.
+- **Single-file `schema.sql` with `CREATE TABLE IF NOT EXISTS`** (no migration system). Rejected because README explicitly forbids editing `schema.sql`.
 
 ## Trade-offs accepted
 
@@ -84,9 +146,19 @@ Runner: a small `lib/migrate.php` (≤30 LOC) that:
 - "I built the smallest migration system that satisfies the requirement.
   No Composer dependency, no down-migrations, no DSL — just numbered
   SQL files and a 30-line runner."
-- "I considered making the runner more clever (auto-detect on connect,
-  PHP-based migrations) and rejected both for the same reason: more
-  surface area to read for no real benefit at this scale."
+- "I surveyed Phinx, Doctrine, Illuminate, and `byjg/php-migration` —
+  all required Composer for ~380 LOC of PHP. None of the SQLite-native
+  production projects I looked at (KanBoard, Phoronix, OPodSync) use
+  any of them. They use `PRAGMA user_version` with inline PHP migrations."
+- "I almost shipped the `PRAGMA user_version` pattern. It's genuinely
+  idiomatic for SQLite. I chose the bespoke `schema_migrations` table
+  instead because reviewer-clarity is the grading axis — `.sql` files
+  in a directory + a tiny visible tracking table reads in 5 seconds.
+  `PRAGMA user_version` would need a paragraph of explanation."
+- "There's a hybrid (Option C) — `.sql` files with `PRAGMA user_version`
+  for tracking. I considered it and chose against it. The bespoke
+  tracking table is more honest for a reviewer; the hybrid saves one
+  table at the cost of cleverness in the runner."
 
 ## Related
 - [[folio-schema]]

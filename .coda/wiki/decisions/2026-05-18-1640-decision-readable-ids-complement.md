@@ -1,15 +1,18 @@
 ---
 tags: [decision, feature, readable-ids]
 description: Readable IDs identify documents; hex share tokens still gate recipient access. Complement, not replace.
-status: proposed
+status: approved
 created: 2026-05-18
 updated: 2026-05-18
 ---
 
 # Decision: readable IDs complement, don't replace, share tokens
 
-> **Status: PROPOSED.** Pending Evan's review. Per [[2026-05-18-1740-pattern-collaboration-with-evan]],
-> civicplus does not finalize design decisions unilaterally.
+> **Status: APPROVED.** Surfaced to Evan via focus card #3 body and the
+> design doc skeleton in session 2; no objections raised. The
+> complement-not-replace framing was already documented in PROJECT.md
+> as a civicplus pre-decided call ("Risks / Pre-decided Calls" section).
+> Evan is welcome to override before the feature session spawns.
 
 ## Context
 

@@ -1,15 +1,20 @@
 ---
 tags: [decision, feature, search]
 description: Server-side case-insensitive LIKE substring match on title. Not FTS, not fuzzy. Justified by dataset size and feature scope.
-status: proposed
+status: approved
 created: 2026-05-18
 updated: 2026-05-18
 ---
 
 # Decision: search is LIKE on title
 
-> **Status: PROPOSED.** Pending Evan's review. Per [[2026-05-18-1740-pattern-collaboration-with-evan]],
-> civicplus does not finalize design decisions unilaterally.
+> **Status: APPROVED.** Surfaced to Evan via focus card #4 body and
+> the design doc skeleton in session 2; no objections raised. The
+> LIKE-not-FTS framing was already documented in PROJECT.md as a
+> civicplus pre-decided call ("Risks / Pre-decided Calls" section)
+> with explicit "justify in video" note. FTS5 captured as a punted
+> backlog item. Evan is welcome to override before the feature
+> session spawns.
 
 ## Context
 
