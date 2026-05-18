@@ -5,3 +5,4 @@ db.sqlite
 .vscode/
 .env
 .focus/.lock
+.coda/features/

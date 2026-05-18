@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-18T23:29:46.980258934Z",
+  "generated_at": "2026-05-18T23:31:09.393896749Z",
   "next_id": 8,
   "cards": [
     {
@@ -8,7 +8,7 @@
       "uuid": "019e3d5a-bb1a-7710-b8f2-c7ab29317e30",
       "title": "migrations-infra: numbered SQL files + tiny PHP runner",
       "type": "card",
-      "status": "backlog",
+      "status": "active",
       "priority": "p0",
       "project": "folio-takehome",
       "created": "2026-05-18",
