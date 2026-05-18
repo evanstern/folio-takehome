@@ -62,6 +62,12 @@ test('migrate() applies pending migrations and skips applied ones', function () 
         assert_true(count($result1['skipped']) === 0, 'first run skips nothing');
         assert_true($result1['applied'][0] === '0001_test.sql', 'first run records basename');
 
+        // Verify the migration SQL actually executed, not just got recorded.
+        $tableExists = (bool) $db->query(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='test_table'"
+        )->fetchColumn();
+        assert_true($tableExists, 'first run creates the table from migration SQL');
+
         $result2 = migrate($db, $tmpDir);
         assert_true(count($result2['applied']) === 0, 'second run applies nothing');
         assert_true(count($result2['skipped']) === 1, 'second run skips applied');

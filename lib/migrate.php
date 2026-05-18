@@ -4,6 +4,9 @@
  * Apply pending SQL migrations from $migrationsDir against $db.
  *
  * Behavior:
+ *  - Forces PDO::ERRMODE_EXCEPTION for the duration of the call so
+ *    SQL errors raise instead of returning false (and being silently
+ *    recorded as applied). Prior error mode is restored before return.
  *  - Ensures schema_migrations tracking table exists (idempotent).
  *  - Discovers *.sql files in $migrationsDir, sorted lexicographically.
  *  - For each file not already recorded in schema_migrations, runs it
@@ -15,53 +18,60 @@
  * Per .coda/designs/migrations-infra.md.
  */
 function migrate(PDO $db, string $migrationsDir): array {
-    $db->exec(
-        'CREATE TABLE IF NOT EXISTS schema_migrations (
-            version    TEXT PRIMARY KEY,
-            applied_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
-        )'
-    );
+    $priorErrMode = $db->getAttribute(PDO::ATTR_ERRMODE);
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $files = glob(rtrim($migrationsDir, '/') . '/*.sql') ?: [];
-    sort($files);
+    try {
+        $db->exec(
+            'CREATE TABLE IF NOT EXISTS schema_migrations (
+                version    TEXT PRIMARY KEY,
+                applied_at TEXT NOT NULL DEFAULT (datetime(\'now\'))
+            )'
+        );
 
-    $appliedSet = [];
-    foreach ($db->query('SELECT version FROM schema_migrations') as $row) {
-        $appliedSet[$row['version']] = true;
+        $files = glob(rtrim($migrationsDir, '/') . '/*.sql') ?: [];
+        sort($files);
+
+        $appliedSet = [];
+        foreach ($db->query('SELECT version FROM schema_migrations') as $row) {
+            $appliedSet[$row['version']] = true;
+        }
+
+        $applied = [];
+        $skipped = [];
+
+        foreach ($files as $file) {
+            $basename = basename($file);
+            if (isset($appliedSet[$basename])) {
+                $skipped[] = $basename;
+                continue;
+            }
+
+            $sql = file_get_contents($file);
+            if ($sql === false) {
+                throw new RuntimeException(
+                    "migration {$basename} failed: could not read file {$file}"
+                );
+            }
+            $db->beginTransaction();
+            try {
+                $db->exec($sql);
+                $stmt = $db->prepare('INSERT INTO schema_migrations (version) VALUES (?)');
+                $stmt->execute([$basename]);
+                $db->commit();
+            } catch (Throwable $e) {
+                $db->rollBack();
+                throw new RuntimeException(
+                    "migration {$basename} failed: " . $e->getMessage(),
+                    0,
+                    $e
+                );
+            }
+            $applied[] = $basename;
+        }
+
+        return ['applied' => $applied, 'skipped' => $skipped];
+    } finally {
+        $db->setAttribute(PDO::ATTR_ERRMODE, $priorErrMode);
     }
-
-    $applied = [];
-    $skipped = [];
-
-    foreach ($files as $file) {
-        $basename = basename($file);
-        if (isset($appliedSet[$basename])) {
-            $skipped[] = $basename;
-            continue;
-        }
-
-        $sql = file_get_contents($file);
-        if ($sql === false) {
-            throw new RuntimeException(
-                "migration {$basename} failed: could not read file {$file}"
-            );
-        }
-        $db->beginTransaction();
-        try {
-            $db->exec($sql);
-            $stmt = $db->prepare('INSERT INTO schema_migrations (version) VALUES (?)');
-            $stmt->execute([$basename]);
-            $db->commit();
-        } catch (Throwable $e) {
-            $db->rollBack();
-            throw new RuntimeException(
-                "migration {$basename} failed: " . $e->getMessage(),
-                0,
-                $e
-            );
-        }
-        $applied[] = $basename;
-    }
-
-    return ['applied' => $applied, 'skipped' => $skipped];
 }
