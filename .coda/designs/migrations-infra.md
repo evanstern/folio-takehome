@@ -1,6 +1,6 @@
 ---
 tags: [design, infra, migrations]
-description: Numbered SQL files in migrations/, applied by tiny PHP runner from seed.php, tracked in schema_migrations. Forward-only. Blocks all feature work.
+description: Numbered SQL files in migrations/, applied by tiny PHP runner from seed.php, tracked in schema_migrations. 0001 owns the full baseline schema (no separate schema.sql). Forward-only. Blocks all feature work.
 status: approved
 created: 2026-05-18
 updated: 2026-05-18
@@ -12,6 +12,13 @@ updated: 2026-05-18
 > [[2026-05-18-1630-decision-migrations-shape]] (session 2). This
 > doc is the contract for the `migrations-infra` feature session
 > (focus card #1).
+>
+> **Revised in session 3** per Evan's question (focus card #8):
+> `schema.sql` is removed entirely and `migrations/0001_init_schema.sql`
+> owns the full baseline. The "frozen baseline" framing is dropped;
+> migrations are the only source of truth for schema. See the
+> decision page's "Revision: schema.sql collapsed into 0001" section
+> for the rationale and video talking points.
 
 ## Problem
 
@@ -24,14 +31,16 @@ wired into the `docker compose up` boot path.
 
 Single feature session delivers all of the following:
 
-1. **`migrations/` directory** at repo root with the first numbered SQL file
-   (`0001_init_schema_migrations.sql`) creating the tracking table
+1. **`migrations/` directory** at repo root with `0001_init_schema.sql`
+   containing the full baseline schema (staff, documents, shares,
+   audit_log, schema_migrations) — see "Schema impact" below
 2. **PHP runner** at `lib/migrate.php` (~30-50 LOC) implementing the contract below
-3. **`seed.php` integration:** runner is invoked after the existing
-   `schema.sql` application, before the seed-row inserts
-4. **`schema.sql` is the frozen baseline.** All future schema changes go
-   in `migrations/`. Worth a single comment at the top of `schema.sql`
-   noting this.
+3. **`seed.php` integration:** runner is invoked first; no more
+   `exec(file_get_contents('schema.sql'))` call. Seed-row inserts
+   come after.
+4. **No `schema.sql` in the repo.** The migration system is the only
+   source of truth for schema. Deletion (not editing) preserves the
+   README's "don't edit `schema.sql`" requirement.
 5. **One test in `tests/test.php`** proving the runner skips applied
    migrations on re-run (idempotency)
 
@@ -43,18 +52,65 @@ Out of scope for this session:
 
 ## Schema impact
 
+`migrations/0001_init_schema.sql` contains the full baseline:
+
 ```sql
--- migrations/0001_init_schema_migrations.sql
-CREATE TABLE schema_migrations (
+-- 0001_init_schema.sql
+--
+-- Baseline schema for folio. This is the only source of truth for
+-- the schema — there is no separate schema.sql. All future schema
+-- changes go in additional migrations (0002+).
+--
+-- schema_migrations uses IF NOT EXISTS so the runner can bootstrap
+-- the tracking table before it discovers and records this very file.
+CREATE TABLE IF NOT EXISTS schema_migrations (
     version    TEXT PRIMARY KEY,
     applied_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE staff (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (created_by) REFERENCES staff(id)
+);
+
+CREATE TABLE shares (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    recipient_email TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (document_id) REFERENCES documents(id)
+);
+
+CREATE TABLE audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    staff_id INTEGER,
+    action TEXT NOT NULL,
+    entity_type TEXT,
+    entity_id INTEGER,
+    details TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 ```
 
-This file is itself a tracked migration. The runner creates the table
-on first run before checking what's applied; once the table exists, the
-runner records `'0001_init_schema_migrations.sql'` in it so subsequent
-runs skip it normally.
+The runner still ensures `schema_migrations` exists via
+`CREATE TABLE IF NOT EXISTS` before discovering migrations. That
+plus the `IF NOT EXISTS` inside 0001 itself makes the bootstrap a
+clean no-op the first time through: runner creates the tracking
+table, finds 0001 unapplied, executes the file (which re-runs the
+`IF NOT EXISTS` on the tracking table harmlessly, then creates the
+four real tables), and records `0001_init_schema.sql` in
+`schema_migrations`.
 
 ## Runner contract
 
@@ -94,7 +150,7 @@ Constraints:
 `NNNN_<slug>.sql` — four-digit zero-padded sequence number, underscore,
 short slug, `.sql` extension.
 
-- `0001_init_schema_migrations.sql` — this design doc
+- `0001_init_schema.sql` — full baseline schema, this design doc
 - `0002_add_publish_at.sql` — scheduled-publishing
 - `0003_add_readable_id.sql` — readable-ids
 - (search-by-name needs no migration — no schema changes for LIKE)
@@ -105,7 +161,7 @@ not semantic versioning.
 
 ## seed.php integration
 
-Current `seed.php` flow:
+Original `seed.php` flow (pre-migrations):
 1. Wipe `db.sqlite` if present
 2. Apply `schema.sql` baseline
 3. Insert seed rows (1 staff, 2 documents)
@@ -113,13 +169,13 @@ Current `seed.php` flow:
 
 New flow:
 1. Wipe `db.sqlite` if present
-2. Apply `schema.sql` baseline
-3. **NEW: `require __DIR__ . '/lib/migrate.php'; migrate($db, __DIR__ . '/migrations');`**
-4. Insert seed rows
-5. Print URL
+2. **`require __DIR__ . '/lib/migrate.php'; migrate($db, __DIR__ . '/migrations');`**
+3. Insert seed rows
+4. Print URL
 
-Migrations apply AFTER `schema.sql` because `schema.sql` is the
-baseline (frozen). Migrations are the deltas on top.
+No `schema.sql` step. The migration runner is the only path to a
+populated schema. `0001_init_schema.sql` creates the baseline tables;
+`0002+` add deltas; `seed.php` doesn't need to know which is which.
 
 ## Audit-log impact
 
@@ -199,6 +255,13 @@ Summary:
   Trades one visible table for cleverness in the runner. I went with
   the explicit table because `SELECT * FROM schema_migrations` is the
   most honest answer to 'what's been applied here.'"
+- "The first pass kept `schema.sql` as a frozen baseline with
+  migrations layered on top. Evan asked whether that was earning its
+  keep — it wasn't. I deleted `schema.sql` and moved the full
+  baseline into `0001_init_schema.sql`. One source of truth.
+  Note the verb: I **deleted** `schema.sql`, didn't edit it. The
+  README says don't edit it; the strong reading is no schema-edit
+  path outside migrations at all."
 
 ## Related
 

@@ -1,6 +1,6 @@
 ---
 tags: [decision, infrastructure, migrations]
-description: Numbered SQL files in migrations/, applied by tiny PHP runner via seed.php, tracked in schema_migrations
+description: Numbered SQL files in migrations/, applied by tiny PHP runner via seed.php, tracked in schema_migrations. Revised — schema.sql removed; 0001 owns the full baseline.
 status: approved
 created: 2026-05-18
 updated: 2026-05-18
@@ -12,6 +12,12 @@ updated: 2026-05-18
 > "A works." Option C explicitly noted as considered-and-rejected per
 > Evan's direction — not as showing-off but as "more than necessary
 > for this scope."
+>
+> **Revised in session 3** — Evan asked whether we could collapse the
+> `schema.sql` "frozen baseline" into the migrations system instead
+> of holding it as a separate file. Answer: yes, and we should. See
+> the "Revision: schema.sql collapsed into 0001" section at the end
+> of this page. Focus card #8 tracked the proposal.
 
 ## Research that informed this
 
@@ -139,7 +145,76 @@ it — that itself is a meaningful change to the deliverable.
 
 - Migrations are forward-only → can't easily roll back a bad migration in dev. Re-seed wipes everything anyway, so dev-cycle cost is zero.
 - The runner is bespoke → reviewer needs to read 30 lines of glue. Acceptable: it's tiny, in one file, and the README explicitly invites us to invent here.
-- `schema.sql` is now the "frozen baseline." Future schema changes go in migrations forever. Worth a note in the video.
+- ~~`schema.sql` is now the "frozen baseline." Future schema changes go in migrations forever. Worth a note in the video.~~ **Superseded — see revision below.** `schema.sql` is removed entirely; `migrations/0001_init_schema.sql` is the baseline. One source of truth.
+
+## Revision: schema.sql collapsed into 0001
+
+After the initial migrations-infra session shipped Option A literally
+("schema.sql is the frozen baseline, migrations stack on top"), Evan
+asked: can we drop `schema.sql` entirely and have `0001_init_schema.sql`
+create the full baseline?
+
+**Approved.** The "frozen baseline" framing was a workaround we
+invented to ship migrations-infra without disturbing the existing
+`schema.sql`. Now that the migration runner exists, the workaround
+has earned its removal.
+
+### New shape
+
+- `schema.sql` **deleted** from repo
+- `migrations/0001_init_schema_migrations.sql` **renamed** to
+  `migrations/0001_init_schema.sql` and **expanded** to contain the
+  full baseline:
+  - `schema_migrations` (tracking table, still `IF NOT EXISTS` for
+    the chicken-and-egg with the runner)
+  - `staff`
+  - `documents`
+  - `shares`
+  - `audit_log`
+- `seed.php` no longer reads `schema.sql`; just calls
+  `migrate($pdo, __DIR__ . '/migrations')` then inserts seed rows
+- Future feature migrations are `0002_*.sql`, `0003_*.sql`, etc.,
+  exactly as planned
+
+### Why now
+
+The migrations-infra branch is not yet merged. This is the cheapest
+moment to make the change — no published-PR cost, no renumbering of
+feature migrations (there are no feature migrations yet).
+
+### Why this, not "keep both"
+
+- **One source of truth.** The original shape had two (`schema.sql`
+  + `migrations/`) glued together by a comment header and runner
+  ordering. Drift was possible by construction.
+- **The migration system actually owns the schema.** Not a workaround
+  layered on a baseline.
+- **Cleaner video beat.** "Schema lives in `migrations/`, full stop"
+  beats "frozen baseline plus deltas."
+- **Strong reading of README.** README says "not by editing
+  `schema.sql` directly." Removing the file enforces that by
+  construction — there is no edit path outside migrations.
+
+### README literal-vs-strong reading
+
+The README sentence assumes `schema.sql` exists. A strict reading
+could argue we should keep it as an artifact even if unused. We're
+going with the strong reading: no schema-edit path outside
+migrations, achieved by deletion. Video should explicitly note
+this: *"we didn't edit schema.sql — we deleted it."*
+
+### Talking points added for the video
+
+- "The original design held `schema.sql` as a 'frozen baseline'
+  with migrations layered on top. After shipping, I asked myself
+  whether the baseline was earning its keep — and it wasn't. One
+  source of truth is honest; two glued together by a comment
+  header is a workaround."
+- "The README says don't edit `schema.sql`. We took the stronger
+  reading: there should be no schema-edit path outside migrations.
+  Easiest way to enforce that is to delete the file. Worth noting
+  we did *delete* rather than *edit* — different verbs, different
+  intent."
 
 ## Talking points for the video
 
@@ -159,6 +234,11 @@ it — that itself is a meaningful change to the deliverable.
   for tracking. I considered it and chose against it. The bespoke
   tracking table is more honest for a reviewer; the hybrid saves one
   table at the cost of cleverness in the runner."
+- "Late in the build I revisited whether `schema.sql` should keep
+  existing as a frozen file alongside the migrations directory. It
+  shouldn't. One source of truth is the right call; the migration
+  system owns the schema. Note that we *deleted* `schema.sql` rather
+  than *edited* it — the README distinction matters."
 
 ## Related
 - [[folio-schema]]

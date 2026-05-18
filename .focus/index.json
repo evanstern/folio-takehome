@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-18T23:31:09.393896749Z",
-  "next_id": 8,
+  "generated_at": "2026-05-18T23:49:43.219451898Z",
+  "next_id": 9,
   "cards": [
     {
       "id": 1,
@@ -79,6 +79,17 @@
       "project": "folio-takehome",
       "created": "2026-05-18",
       "dir": "cards/0007-punt-schedule-edit-ui-for-already-created-documents"
+    },
+    {
+      "id": 8,
+      "uuid": "019e3d79-053b-7956-8c3e-59f8eda2025a",
+      "title": "Collapse schema.sql into 0001 initial migration",
+      "type": "card",
+      "status": "active",
+      "priority": "p1",
+      "project": "main",
+      "created": "2026-05-18",
+      "dir": "cards/0008-collapse-schema-sql-into-0001-initial-migration"
     }
   ]
 }
