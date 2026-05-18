@@ -4,3 +4,4 @@ db.sqlite
 .idea/
 .vscode/
 .env
+.focus/.lock
