@@ -12,6 +12,8 @@ docker compose up
 
 Open http://localhost:8000. The first run builds the image (~30 seconds); subsequent runs start instantly.
 
+If port 8000 is taken on your machine, copy `.env.example` to `.env` and set `FOLIO_PORT` to anything free (e.g. `FOLIO_PORT=8088`). The default keeps the original `localhost:8000`.
+
 Each `docker compose up` re-seeds `db.sqlite` from scratch, so you always start with a known state. Stop with `Ctrl+C`.
 
 To run the tests:

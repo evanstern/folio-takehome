@@ -32,6 +32,7 @@ $stmt = $pdo->prepare('
 ');
 $stmt->execute([$docId, $token, 'recipient@example.com']);
 
+$port = getenv('FOLIO_PORT') ?: '8000';
 echo "Seeded db.sqlite.\n";
-echo "Admin:        http://localhost:8000/admin.php\n";
-echo "Sample share: http://localhost:8000/view.php?token={$token}\n";
+echo "Admin:        http://localhost:{$port}/admin.php\n";
+echo "Sample share: http://localhost:{$port}/view.php?token={$token}\n";

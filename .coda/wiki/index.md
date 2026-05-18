@@ -45,6 +45,7 @@ Internal links: `[[page-name]]` (no paths, no `.md`).
 - [[decision-scheduling-gates-content]] — scheduling gates *content visibility*, not document/ID existence
 - [[decision-search-like]] — server-side case-insensitive LIKE substring match on title; not FTS, not fuzzy
 - [[decision-coda-dir-shipped]] — `.coda/` ships in the submission (README invites it; orchestrator setup is part of the grade)
+- [[decision-port-configurable]] — host port via `FOLIO_PORT` in `.env`, default 8000 (pushback moment)
 
 ### Patterns
 - [[pattern-audit-log]] — how `audit_log()` is called (entity_type/entity_id/details JSON)

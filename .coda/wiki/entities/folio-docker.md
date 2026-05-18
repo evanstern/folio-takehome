@@ -12,11 +12,12 @@ updated: 2026-05-18
 - Installs `libsqlite3-dev` + `docker-php-ext-install pdo_sqlite`
 - `WORKDIR /app`
 
-## docker-compose.yml (9 lines)
+## docker-compose.yml
 - Single `app` service, builds locally
 - Mounts `.:/app` (so host edits are live)
-- Port `8000:8000`
-- Command: `sh -c "php seed.php && php -S 0.0.0.0:8000 -t public/"`
+- Port `${FOLIO_PORT:-8000}:8000` (configurable via `.env`, see [[decision-port-configurable]])
+- Passes `FOLIO_PORT` into the container so `seed.php` can print the right URLs
+- Command: `sh -c "php seed.php && php -S 0.0.0.0:8000 -t public/"` (container always listens on 8000 internally)
 
 ## seed.php
 - **Wipes `db.sqlite`** (unlink if exists)
@@ -36,3 +37,4 @@ which is unambiguous.)
 
 ## Related
 - [[decision-migrations-shape]]
+- [[decision-port-configurable]]
