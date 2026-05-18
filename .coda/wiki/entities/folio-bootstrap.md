@@ -23,7 +23,7 @@ Reads `staff` row id=1. Throws if missing. **This is the only "auth"**
 
 ### `audit_log(string $action, string $entity_type, int $entity_id, array $details = []): void`
 Inserts into `audit_log`. Details are JSON-encoded. **Pattern to follow
-for every new audited action in the three features** — see [[pattern-audit-log]].
+for every new audited action in the three features** — see [[2026-05-18-1600-pattern-audit-log]].
 
 ### `random_token(int $bytes = 16): string`
 `bin2hex(random_bytes($bytes))`. 32 hex chars at default. Used for share tokens.
@@ -33,7 +33,7 @@ for every new audited action in the three features** — see [[pattern-audit-log
 
 ## Timezone
 `date_default_timezone_set('America/Chicago')` runs at the top. For
-[[decision-scheduling-gates-content]], `publish_at` storage format and
+[[2026-05-18-1635-decision-scheduling-gates-content]], `publish_at` storage format and
 comparison need to be timezone-aware. Recommend storing UTC in SQLite
 (`datetime('now')` is UTC by default in SQLite, so the existing
 `created_at` columns are already UTC), comparing against
@@ -41,5 +41,5 @@ comparison need to be timezone-aware. Recommend storing UTC in SQLite
 
 ## Related
 - [[folio-schema]]
-- [[pattern-audit-log]]
-- [[decision-scheduling-gates-content]]
+- [[2026-05-18-1600-pattern-audit-log]]
+- [[2026-05-18-1635-decision-scheduling-gates-content]]

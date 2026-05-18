@@ -18,7 +18,7 @@ updated: 2026-05-18
 
 ## Surfaces affected by features
 
-- **Scheduled publishing:** this is THE gate. If `d.publish_at` is set and in the future, render "not yet available" instead of body. Do NOT 404 — the share is valid, the content just isn't yet. Per [[decision-scheduling-gates-content]].
+- **Scheduled publishing:** this is THE gate. If `d.publish_at` is set and in the future, render "not yet available" instead of body. Do NOT 404 — the share is valid, the content just isn't yet. Per [[2026-05-18-1635-decision-scheduling-gates-content]].
 - **Readable IDs:** the share-link URL may change shape, but the route handler may move to a new file (`d.php` or similar) — decided in the readable-IDs design doc.
 - **Search:** no impact.
 - **Audit log:** consider logging `audit_log('view', 'share', $shareId)` when the recipient opens — currently not logged. Spec doesn't require it for "share actions"; design call.
@@ -31,7 +31,7 @@ intentionally omits the staff nav user-pill. Worth preserving when
 scheduled-publishing adds the "not yet available" state.
 
 ## Related
-- [[decision-scheduling-gates-content]]
-- [[decision-readable-ids-complement]]
-- [[folio-layout]]
-- [[pattern-audit-log]]
+- [[2026-05-18-1635-decision-scheduling-gates-content]]
+- [[2026-05-18-1640-decision-readable-ids-complement]]
+- [[2026-05-18-1836-folio-layout]]
+- [[2026-05-18-1600-pattern-audit-log]]

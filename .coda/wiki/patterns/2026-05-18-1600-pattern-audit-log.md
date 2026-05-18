@@ -40,4 +40,4 @@ Defined in `lib/bootstrap.php`. Writes one row to `audit_log` with
 ## Related
 - [[folio-bootstrap]]
 - [[folio-schema]]
-- [[decision-scheduling-gates-content]]
+- [[2026-05-18-1635-decision-scheduling-gates-content]]

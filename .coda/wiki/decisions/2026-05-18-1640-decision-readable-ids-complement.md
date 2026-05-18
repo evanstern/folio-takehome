@@ -8,7 +8,7 @@ updated: 2026-05-18
 
 # Decision: readable IDs complement, don't replace, share tokens
 
-> **Status: PROPOSED.** Pending Evan's review. Per [[pattern-collaboration-with-evan]],
+> **Status: PROPOSED.** Pending Evan's review. Per [[2026-05-18-1740-pattern-collaboration-with-evan]],
 > civicplus does not finalize design decisions unilaterally.
 
 ## Context
@@ -68,4 +68,4 @@ Examples: `welcome-packet-7qx4`, `onboarding-3kma`, `untitled-2bxv`.
 - [[folio-schema]]
 - [[folio-share-page]]
 - [[folio-view-page]]
-- [[decision-scheduling-gates-content]]
+- [[2026-05-18-1635-decision-scheduling-gates-content]]

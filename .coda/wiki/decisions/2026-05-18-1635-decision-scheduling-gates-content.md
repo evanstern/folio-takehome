@@ -8,7 +8,7 @@ updated: 2026-05-18
 
 # Decision: scheduling gates content, not identity
 
-> **Status: PROPOSED.** Pending Evan's review. Per [[pattern-collaboration-with-evan]],
+> **Status: PROPOSED.** Pending Evan's review. Per [[2026-05-18-1740-pattern-collaboration-with-evan]],
 > civicplus does not finalize design decisions unilaterally.
 
 ## Open question (per PROJECT.md edit)
@@ -73,7 +73,7 @@ actions should be logged to `audit_log`."
 Pre-publish hits to `/d/<readable-id>?token=<hex>` resolve the document
 (ID exists), check publish_at, then either show body or "not yet available."
 Token validity is checked first; invalid token = 404. Future-published with
-valid token = "not yet available." See [[decision-readable-ids-complement]].
+valid token = "not yet available." See [[2026-05-18-1640-decision-readable-ids-complement]].
 
 ## Rejected alternatives
 
@@ -95,5 +95,5 @@ valid token = "not yet available." See [[decision-readable-ids-complement]].
 - [[folio-schema]]
 - [[folio-view-page]]
 - [[folio-bootstrap]]
-- [[pattern-audit-log]]
-- [[decision-readable-ids-complement]]
+- [[2026-05-18-1600-pattern-audit-log]]
+- [[2026-05-18-1640-decision-readable-ids-complement]]

@@ -36,7 +36,7 @@ of hand-rolled CSS (verified via `wc -l`).
 | File | Purpose |
 |---|---|
 | `lib/bootstrap.php` | db, current_staff, audit_log, random_token, h — see [[folio-bootstrap]] |
-| `lib/layout.php` | render_header/render_footer — see [[folio-layout]] |
+| `lib/layout.php` | render_header/render_footer — see [[2026-05-18-1836-folio-layout]] |
 
 ## Flow
 
@@ -55,7 +55,7 @@ Seeded as `freddy@folio.example`. Out of scope to extend.
 ## Related
 - [[folio-schema]]
 - [[folio-bootstrap]]
-- [[folio-layout]]
+- [[2026-05-18-1836-folio-layout]]
 - [[folio-admin-page]]
 - [[folio-share-page]]
 - [[folio-view-page]]

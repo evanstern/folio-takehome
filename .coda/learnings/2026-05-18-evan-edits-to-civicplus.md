@@ -31,7 +31,7 @@ silently record and hope Evan reads the wiki.
 ### Changed repo line
 From "fork TBD" to "Bare repo with workspace branching strategy."
 Confirmed with Evan: this means **git worktrees per feature, branched
-off main**. Documented in [[pattern-branching-worktrees]].
+off main**. Documented in [[2026-05-18-1730-pattern-branching-worktrees]].
 
 ## What Evan changed in PROJECT.md
 
@@ -50,7 +50,7 @@ not a future-tense aspiration.
 Design phase now explicitly uses **focus + focus MCP** to track tasks.
 Each focus card has the feature overview + link to the design doc.
 Civicplus must run `focus init` to bootstrap. Documented in
-[[pattern-focus-task-convention]].
+[[2026-05-18-1735-pattern-focus-task-convention]].
 
 ### Opened questions on two decisions
 Evan re-opened two decisions civicplus had pre-locked:
@@ -69,11 +69,11 @@ No semantic change. Bolded "Justify in video."
 
 ## What I (Zach, on Evan's behalf) did in response
 
-1. Created [[pattern-branching-worktrees]] — documents the
+1. Created [[2026-05-18-1730-pattern-branching-worktrees]] — documents the
    worktrees-per-feature convention
-2. Created [[pattern-focus-task-convention]] — documents the focus card
+2. Created [[2026-05-18-1735-pattern-focus-task-convention]] — documents the focus card
    structure (overview + link to design doc + acceptance list)
-3. Created [[pattern-collaboration-with-evan]] — the **operating mode**:
+3. Created [[2026-05-18-1740-pattern-collaboration-with-evan]] — the **operating mode**:
    peer collaboration, proactive surfacing, decisions as PROPOSED until
    approved
 4. Marked all four feature/infra decisions as `status: proposed` in

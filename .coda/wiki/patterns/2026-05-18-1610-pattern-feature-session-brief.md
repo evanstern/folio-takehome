@@ -56,6 +56,6 @@ touch. Don't add comments/docstrings to untouched code.
   the migration table exists post-`seed.php`, single PR.
 
 ## Related
-- [[decision-migrations-shape]]
-- [[pattern-audit-log]]
-- [[pattern-test-harness]]
+- [[2026-05-18-1630-decision-migrations-shape]]
+- [[2026-05-18-1600-pattern-audit-log]]
+- [[2026-05-18-1605-pattern-test-harness]]

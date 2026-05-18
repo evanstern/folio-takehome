@@ -100,4 +100,4 @@ hits the DB directly, not the HTTP surface, so it's unaffected.
 
 ## Related
 - [[folio-docker]]
-- [[pattern-collaboration-with-evan]]
+- [[2026-05-18-1740-pattern-collaboration-with-evan]]

@@ -8,7 +8,7 @@ updated: 2026-05-18
 # Folio schema
 
 `schema.sql` (33 lines, all 4 tables). **Do not edit directly** —
-migrations only. See [[decision-migrations-shape]].
+migrations only. See [[2026-05-18-1630-decision-migrations-shape]].
 
 ## Tables
 
@@ -46,10 +46,10 @@ Likely new columns / tables (final decisions live in design docs):
 
 - **Scheduled publishing:** `documents.publish_at TEXT NULL` (null = published immediately)
 - **Readable IDs:** `documents.readable_id TEXT UNIQUE` (added with backfill in migration; nullability TBD in design doc)
-- **Search:** no schema change for the LIKE approach. If FTS5 were chosen, an FTS virtual table would be added; we rejected FTS — see [[decision-search-like]].
+- **Search:** no schema change for the LIKE approach. If FTS5 were chosen, an FTS virtual table would be added; we rejected FTS — see [[2026-05-18-1645-decision-search-like]].
 - **Migrations infra:** `schema_migrations (filename TEXT PRIMARY KEY, applied_at TEXT)`
 
 ## Related
-- [[decision-migrations-shape]]
-- [[pattern-audit-log]]
+- [[2026-05-18-1630-decision-migrations-shape]]
+- [[2026-05-18-1600-pattern-audit-log]]
 - [[folio-bootstrap]]

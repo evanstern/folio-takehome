@@ -28,7 +28,7 @@ and the codebase punts that decision.
 ## Why it matters for the three features
 
 - **Scheduled publishing:** affects no recipient-side auth, since recipients still gate on share token. Fine.
-- **Readable IDs:** if we ever expose `/d/<readable-id>` *without* a token, we have a privacy problem — anyone with the URL sees the doc. Our [[decision-readable-ids-complement]] keeps the token, so this is contained.
+- **Readable IDs:** if we ever expose `/d/<readable-id>` *without* a token, we have a privacy problem — anyone with the URL sees the doc. Our [[2026-05-18-1640-decision-readable-ids-complement]] keeps the token, so this is contained.
 - **Search:** the search endpoint is staff-only by URL, but there's no actual gate. Searching for "salaries" returns any matching doc. Worth naming.
 
 ## What to do about it

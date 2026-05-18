@@ -8,7 +8,7 @@ updated: 2026-05-18
 
 # Decision: migrations shape
 
-> **Status: PROPOSED.** Pending Evan's review. Per [[pattern-collaboration-with-evan]],
+> **Status: PROPOSED.** Pending Evan's review. Per [[2026-05-18-1740-pattern-collaboration-with-evan]],
 > civicplus does not finalize design decisions unilaterally.
 
 ## Open question (per PROJECT.md edit)

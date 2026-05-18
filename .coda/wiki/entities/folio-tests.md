@@ -30,7 +30,7 @@ test failed.
 docker compose exec app php tests/test.php
 ```
 
-## Pattern for new tests (per [[pattern-test-harness]])
+## Pattern for new tests (per [[2026-05-18-1605-pattern-test-harness]])
 
 Each of the three features needs at least one `test('...', function () { ... })`
 block. Hit the DB directly via `db()`; that's how the existing test does it.
@@ -38,4 +38,4 @@ For request-flow coverage, `system('curl ...')` against the running server
 is acceptable but heavier; prefer DB-level assertions where they're meaningful.
 
 ## Related
-- [[pattern-test-harness]]
+- [[2026-05-18-1605-pattern-test-harness]]

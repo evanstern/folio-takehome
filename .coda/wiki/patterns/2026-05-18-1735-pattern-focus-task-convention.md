@@ -90,6 +90,6 @@ Plus the "shipping" meta-card for the video + commit-log polish at the end.
 - Civicplus has one place to ask "what's blocked / what's next"
 
 ## Related
-- [[pattern-feature-session-brief]]
-- [[pattern-branching-worktrees]]
-- [[decision-coda-dir-shipped]]
+- [[2026-05-18-1610-pattern-feature-session-brief]]
+- [[2026-05-18-1730-pattern-branching-worktrees]]
+- [[2026-05-18-1620-decision-coda-dir-shipped]]

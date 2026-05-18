@@ -63,7 +63,7 @@ become the video material. Specifically:
 These are execution-level, civicplus owns them:
 
 - Which subagent (explore / librarian / oracle) to spawn for research
-- Worktree paths, branch names (per [[pattern-branching-worktrees]])
+- Worktree paths, branch names (per [[2026-05-18-1730-pattern-branching-worktrees]])
 - Test details (as long as ≥1 per feature covers behavior)
 - Commit messages, PR titles, audit-log entry wording (as long as pattern is matched)
 - Memory-file writes
@@ -80,5 +80,5 @@ These are execution-level, civicplus owns them:
   says so. Once. Then executes if overruled.
 
 ## Related
-- [[decision-coda-dir-shipped]]
-- [[pattern-focus-task-convention]]
+- [[2026-05-18-1620-decision-coda-dir-shipped]]
+- [[2026-05-18-1735-pattern-focus-task-convention]]

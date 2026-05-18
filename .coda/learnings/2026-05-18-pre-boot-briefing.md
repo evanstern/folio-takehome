@@ -15,13 +15,13 @@ Civicplus. Single-engagement orchestrator for the Folio take-home from
 getstreamline. Budget: ~3 hours. You live in `.coda/` inside the project
 repo at `~/projects/folio-takehome`. Your identity, memory, wiki, and
 designs ship with the codebase — that's intentional, per
-[[decision-coda-dir-shipped]].
+[[2026-05-18-1620-decision-coda-dir-shipped]].
 
 ## Who Evan is
 
 The principal. Not your manager — your **peer**. You propose, he approves
 design calls. You execute, he reviews. He moves at the speed of thought;
-you hold the threads. See [[pattern-collaboration-with-evan]].
+you hold the threads. See [[2026-05-18-1740-pattern-collaboration-with-evan]].
 
 ## What's already done (don't redo)
 
@@ -40,14 +40,14 @@ your job in step 2 below.
 Four decisions are tentative. You must surface each to Evan with the
 artifact link before treating it as final:
 
-1. [[decision-migrations-shape]] — bespoke runner, but Evan wants research
+1. [[2026-05-18-1630-decision-migrations-shape]] — bespoke runner, but Evan wants research
    on existing PHP migration tools first
-2. [[decision-readable-ids-complement]] — complement, not replace
-3. [[decision-scheduling-gates-content]] — timezone handling has an open
+2. [[2026-05-18-1640-decision-readable-ids-complement]] — complement, not replace
+3. [[2026-05-18-1635-decision-scheduling-gates-content]] — timezone handling has an open
    question Evan explicitly raised
-4. [[decision-search-like]] — LIKE substring
+4. [[2026-05-18-1645-decision-search-like]] — LIKE substring
 
-The fifth, [[decision-coda-dir-shipped]], is approved.
+The fifth, [[2026-05-18-1620-decision-coda-dir-shipped]], is approved.
 
 ## Your first session, ordered
 
@@ -101,11 +101,11 @@ Message Evan with:
   `America/Chicago` per `lib/bootstrap.php`)
 - The one specific question: is staff-local-time the right display
   zone, or should the form accept a timezone per-document?
-- Link to [[decision-scheduling-gates-content]]
+- Link to [[2026-05-18-1635-decision-scheduling-gates-content]]
 - Ask: approve / revise / discuss?
 
 ### 5. `focus init` + cards (10 min)
-Per [[pattern-focus-task-convention]]. Initialize focus, then create
+Per [[2026-05-18-1735-pattern-focus-task-convention]]. Initialize focus, then create
 four cards:
 - `migrations-infra`
 - `scheduled-publishing`
@@ -122,12 +122,12 @@ Only after Evan approves the proposed decisions. For each:
 - Reference the approved decision page from the design doc
 
 ### 7. Spawn migrations-infra session (~20 min)
-Worktree per [[pattern-branching-worktrees]]:
+Worktree per [[2026-05-18-1730-pattern-branching-worktrees]]:
 ```sh
 git worktree add ../folio-takehome-migrations -b feat/migrations-infra main
 ```
 Spawn the feature session with the brief template from
-[[pattern-feature-session-brief]]. Wait for PR. Review. Merge.
+[[2026-05-18-1610-pattern-feature-session-brief]]. Wait for PR. Review. Merge.
 
 ### 8. Three parallel feature sessions (~75 min)
 After migrations lands:

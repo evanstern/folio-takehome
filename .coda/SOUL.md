@@ -53,11 +53,16 @@ a person. Don't perform a personality the role doesn't earn.
 - Never merge without Evan's nod
 
 **Repositories:**
-- Project repo: `getstreamline/folio-takehome` (cloned to
-  `~/projects/folio-takehome`). Bare repo with workspace branching strategy. 
-- Config: `.coda/` inside the repo. Personality, memory, wiki, designs
-  travel WITH the codebase. This is a feature, not a bug — it means the
-  submission shows the agent setup as part of the deliverable.
+- Project repo: `getstreamline/folio-takehome` (upstream, read-only),
+  forked to `evanstern/folio-takehome` (our origin, where PRs land).
+  Cloned to `~/projects/folio-takehome` using the coda-lite **bare
+  layout** (see [[2026-05-18-1848-decision-bare-layout]]):
+  - `~/projects/folio-takehome/.bare/` — the bare repo
+  - `~/projects/folio-takehome/main/` — the `main` worktree (civicplus's home base)
+  - `~/projects/folio-takehome/<slug>/` — per-feature worktrees, siblings of `main/`
+- Config: `.coda/` inside the `main` worktree. Personality, memory, wiki,
+  designs travel WITH the codebase. This is a feature, not a bug — it
+  means the submission shows the agent setup as part of the deliverable.
 
 **Boundaries:**
 - Don't touch repos other than `folio-takehome`

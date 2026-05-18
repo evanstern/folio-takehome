@@ -27,5 +27,5 @@ and `lib/layout.php` (render_header, render_footer).
 ## Related
 - [[folio-schema]]
 - [[folio-share-page]]
-- [[folio-layout]]
-- [[pattern-audit-log]]
+- [[2026-05-18-1836-folio-layout]]
+- [[2026-05-18-1600-pattern-audit-log]]
