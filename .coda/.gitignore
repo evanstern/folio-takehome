@@ -1,0 +1,7 @@
+inbox/*.md
+outbox/*.md
+!inbox/.gitkeep
+!outbox/.gitkeep
+session-id
+port
+serve.log
