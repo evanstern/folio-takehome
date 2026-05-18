@@ -87,6 +87,7 @@ When in doubt: date-prefix it.
 - [[2026-05-18-1842-decision-port-configurable]] — host port via `FOLIO_PORT` in `.env`, default 8000 (pushback moment) — **approved**
 - [[2026-05-18-1848-decision-bare-layout]] — repo uses coda-lite bare layout: `.bare/` + sibling worktrees, `main/` is civicplus's home base — **approved**
 - [[2026-05-18-1851-decision-compose-project-name-pinned]] — `name: folio-takehome` pinned in `docker-compose.yml`, overridable per worktree via `COMPOSE_PROJECT_NAME` — **approved**
+- [[2026-05-18-1858-decision-playwright-mcp-project-local]] — Playwright MCP in `.coda/opencode.json`, headless + isolated, verified end-to-end — **approved**
 
 ### Patterns (operational backbone, in creation order)
 - [[2026-05-18-1600-pattern-audit-log]] — how `audit_log()` is called (entity_type/entity_id/details JSON)
