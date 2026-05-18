@@ -1,0 +1,51 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-05-18T23:11:07.520049195Z",
+  "next_id": 5,
+  "cards": [
+    {
+      "id": 1,
+      "uuid": "019e3d5a-bb1a-7710-b8f2-c7ab29317e30",
+      "title": "migrations-infra: numbered SQL files + tiny PHP runner",
+      "type": "card",
+      "status": "backlog",
+      "priority": "p0",
+      "project": "folio-takehome",
+      "created": "2026-05-18",
+      "dir": "cards/0001-migrations-infra-numbered-sql-files-tiny-php-runner"
+    },
+    {
+      "id": 2,
+      "uuid": "019e3d5a-c115-7084-b34e-8620b94cf282",
+      "title": "scheduled-publishing: gate content visibility by publish_at",
+      "type": "card",
+      "status": "backlog",
+      "priority": "p1",
+      "project": "folio-takehome",
+      "created": "2026-05-18",
+      "dir": "cards/0002-scheduled-publishing-gate-content-visibility-by-publish-at"
+    },
+    {
+      "id": 3,
+      "uuid": "019e3d5a-c4f2-752a-8de8-fd43ec7b253d",
+      "title": "readable-ids: short doc IDs that complement share tokens",
+      "type": "card",
+      "status": "backlog",
+      "priority": "p1",
+      "project": "folio-takehome",
+      "created": "2026-05-18",
+      "dir": "cards/0003-readable-ids-short-doc-ids-that-complement-share-tokens"
+    },
+    {
+      "id": 4,
+      "uuid": "019e3d5a-c91e-7258-8c6e-4ffb24451253",
+      "title": "search-by-name: case-insensitive LIKE substring on title",
+      "type": "card",
+      "status": "backlog",
+      "priority": "p2",
+      "project": "folio-takehome",
+      "created": "2026-05-18",
+      "dir": "cards/0004-search-by-name-case-insensitive-like-substring-on-title"
+    }
+  ]
+}
