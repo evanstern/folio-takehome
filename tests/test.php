@@ -165,13 +165,24 @@ test('readable_id format matches spec', function () {
     );
 });
 
-test('100 readable_ids for same title are unique', function () {
-    $seen = [];
-    for ($i = 0; $i < 100; $i++) {
-        $rid = generate_readable_id('Welcome to Folio');
-        assert_true(!isset($seen[$rid]), "duplicate generated: {$rid}");
-        $seen[$rid] = true;
-    }
+test('generate_readable_id_unique returns distinct values across existing rows', function () {
+    $title = 'Collision Probe';
+
+    $first = generate_readable_id_unique(db(), $title);
+    $stmt = db()->prepare('
+        INSERT INTO documents (title, body, created_by, readable_id)
+        VALUES (?, ?, 1, ?)
+    ');
+    $stmt->execute([$title, 'body one', $first]);
+
+    $second = generate_readable_id_unique(db(), $title);
+    assert_true($second !== $first, 'second generated readable_id should differ from existing row');
+
+    $stmt->execute([$title, 'body two', $second]);
+
+    $countStmt = db()->prepare('SELECT COUNT(*) FROM documents WHERE readable_id IN (?, ?)');
+    $countStmt->execute([$first, $second]);
+    assert_true((int) $countStmt->fetchColumn() === 2, 'expected both readable_ids persisted uniquely');
 });
 
 test('view.php?d=<rid>&token=<hex> resolves to the doc', function () {
