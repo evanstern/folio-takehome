@@ -28,16 +28,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($error === null) {
+            $readableId = generate_readable_id_unique(db(), $title);
             $stmt = db()->prepare('
-                INSERT INTO documents (title, body, created_by, publish_at)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO documents (title, body, created_by, publish_at, readable_id)
+                VALUES (?, ?, ?, ?, ?)
             ');
-            $stmt->execute([$title, $body, $staff['id'], $publishAt]);
+            $stmt->execute([$title, $body, $staff['id'], $publishAt, $readableId]);
             $docId = (int) db()->lastInsertId();
 
             audit_log('create', 'document', $docId, [
                 'title' => $title,
                 'publish_at' => $publishAt,
+                'readable_id' => $readableId,
             ]);
 
             header('Location: /admin.php?created=' . $docId);

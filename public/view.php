@@ -4,14 +4,25 @@ require_once __DIR__ . '/../lib/bootstrap.php';
 require_once __DIR__ . '/../lib/layout.php';
 
 $token = $_GET['token'] ?? '';
+$readableId = $_GET['d'] ?? '';
 
-$stmt = db()->prepare('
-    SELECT d.*, s.recipient_email
-    FROM shares s
-    JOIN documents d ON d.id = s.document_id
-    WHERE s.token = ?
-');
-$stmt->execute([$token]);
+if ($readableId !== '') {
+    $stmt = db()->prepare('
+        SELECT d.*, s.recipient_email
+        FROM shares s
+        JOIN documents d ON d.id = s.document_id
+        WHERE d.readable_id = ? AND s.token = ?
+    ');
+    $stmt->execute([$readableId, $token]);
+} else {
+    $stmt = db()->prepare('
+        SELECT d.*, s.recipient_email
+        FROM shares s
+        JOIN documents d ON d.id = s.document_id
+        WHERE s.token = ?
+    ');
+    $stmt->execute([$token]);
+}
 $doc = $stmt->fetch();
 
 if (!$doc) {

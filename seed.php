@@ -18,13 +18,16 @@ $pdo->exec("
         ('freddy@folio.example', 'Freddy Folio')
 ");
 
+$title = 'Welcome Packet';
+$readableId = generate_readable_id_unique($pdo, $title);
 $stmt = $pdo->prepare('
-    INSERT INTO documents (title, body, created_by)
-    VALUES (?, ?, 1)
+    INSERT INTO documents (title, body, created_by, readable_id)
+    VALUES (?, ?, 1, ?)
 ');
 $stmt->execute([
-    'Welcome Packet',
+    $title,
     "Welcome to Folio!\n\nThis is the body of your welcome packet.",
+    $readableId,
 ]);
 $docId = (int) $pdo->lastInsertId();
 
@@ -38,4 +41,4 @@ $stmt->execute([$docId, $token, 'recipient@example.com']);
 $port = getenv('FOLIO_PORT') ?: '8000';
 echo "Seeded db.sqlite.\n";
 echo "Admin:        http://localhost:{$port}/admin.php\n";
-echo "Sample share: http://localhost:{$port}/view.php?token={$token}\n";
+echo "Sample share: http://localhost:{$port}/view.php?d={$readableId}&token={$token}\n";

@@ -6,6 +6,8 @@
 // FOLIO_TZ in .env. See .coda/designs/scheduled-publishing.md.
 date_default_timezone_set(getenv('FOLIO_TZ') ?: 'America/Chicago');
 
+require_once __DIR__ . '/readable_id.php';
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo === null) {
