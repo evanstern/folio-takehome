@@ -2,6 +2,8 @@
 
 date_default_timezone_set('America/Chicago');
 
+require_once __DIR__ . '/readable_id.php';
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo === null) {
