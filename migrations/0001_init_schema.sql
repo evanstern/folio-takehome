@@ -1,3 +1,20 @@
+-- 0001_init_schema.sql
+--
+-- Baseline migration. Owns the full initial schema: the tracking table
+-- plus every domain table. There is no `schema.sql` — migrations are
+-- the single source of truth.
+--
+-- `schema_migrations` uses CREATE TABLE IF NOT EXISTS because the runner
+-- bootstraps the same table before discovering migrations (chicken-and-
+-- egg). The domain tables use bare CREATE TABLE: a re-apply against a
+-- populated database should fail loudly, not silently skip real drift.
+--
+-- Per .coda/designs/migrations-infra.md.
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    version    TEXT PRIMARY KEY,
+    applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE staff (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT NOT NULL UNIQUE,
