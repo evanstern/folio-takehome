@@ -1,6 +1,10 @@
 <?php
 
-date_default_timezone_set('America/Chicago');
+// Single source of truth for app timezone. Staff datetime-local input is
+// parsed in this tz on create; the not-yet-available page renders the
+// publish time in this tz with the abbreviation appended. Override via
+// FOLIO_TZ in .env. See .coda/designs/scheduled-publishing.md.
+date_default_timezone_set(getenv('FOLIO_TZ') ?: 'America/Chicago');
 
 function db(): PDO {
     static $pdo = null;
