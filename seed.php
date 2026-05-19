@@ -9,10 +9,8 @@ if (file_exists($dbPath)) {
 }
 
 $pdo = db();
-$pdo->exec(file_get_contents(__DIR__ . '/schema.sql'));
 
-// Apply incremental migrations on top of the frozen schema.sql baseline.
-// Per .coda/designs/migrations-infra.md.
+// Migrations own the schema. 0001 is the baseline.
 migrate($pdo, __DIR__ . '/migrations');
 
 $pdo->exec("
