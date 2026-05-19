@@ -4,7 +4,7 @@ id: 8
 uuid: 019e3d79-053b-7956-8c3e-59f8eda2025a
 title: Collapse schema.sql into 0001 initial migration
 type: card
-status: active
+status: done
 priority: p1
 project: main
 created: 2026-05-18

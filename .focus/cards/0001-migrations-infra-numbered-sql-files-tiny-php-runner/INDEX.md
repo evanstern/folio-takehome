@@ -4,7 +4,7 @@ id: 1
 uuid: 019e3d5a-bb1a-7710-b8f2-c7ab29317e30
 title: 'migrations-infra: numbered SQL files + tiny PHP runner'
 type: card
-status: active
+status: done
 priority: p0
 project: folio-takehome
 created: 2026-05-18

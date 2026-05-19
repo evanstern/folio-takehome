@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-05-18T23:49:43.219451898Z",
+  "generated_at": "2026-05-19T01:09:40.024387836Z",
   "next_id": 9,
   "cards": [
     {
@@ -8,7 +8,7 @@
       "uuid": "019e3d5a-bb1a-7710-b8f2-c7ab29317e30",
       "title": "migrations-infra: numbered SQL files + tiny PHP runner",
       "type": "card",
-      "status": "active",
+      "status": "done",
       "priority": "p0",
       "project": "folio-takehome",
       "created": "2026-05-18",
@@ -19,7 +19,7 @@
       "uuid": "019e3d5a-c115-7084-b34e-8620b94cf282",
       "title": "scheduled-publishing: gate content visibility by publish_at",
       "type": "card",
-      "status": "backlog",
+      "status": "done",
       "priority": "p1",
       "project": "folio-takehome",
       "created": "2026-05-18",
@@ -30,7 +30,7 @@
       "uuid": "019e3d5a-c4f2-752a-8de8-fd43ec7b253d",
       "title": "readable-ids: short doc IDs that complement share tokens",
       "type": "card",
-      "status": "backlog",
+      "status": "done",
       "priority": "p1",
       "project": "folio-takehome",
       "created": "2026-05-18",
@@ -85,7 +85,7 @@
       "uuid": "019e3d79-053b-7956-8c3e-59f8eda2025a",
       "title": "Collapse schema.sql into 0001 initial migration",
       "type": "card",
-      "status": "active",
+      "status": "done",
       "priority": "p1",
       "project": "main",
       "created": "2026-05-18",

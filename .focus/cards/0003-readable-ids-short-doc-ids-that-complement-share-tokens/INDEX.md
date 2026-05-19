@@ -4,7 +4,7 @@ id: 3
 uuid: 019e3d5a-c4f2-752a-8de8-fd43ec7b253d
 title: 'readable-ids: short doc IDs that complement share tokens'
 type: card
-status: backlog
+status: done
 priority: p1
 project: folio-takehome
 created: 2026-05-18

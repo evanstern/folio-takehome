@@ -4,7 +4,7 @@ id: 2
 uuid: 019e3d5a-c115-7084-b34e-8620b94cf282
 title: 'scheduled-publishing: gate content visibility by publish_at'
 type: card
-status: backlog
+status: done
 priority: p1
 project: folio-takehome
 created: 2026-05-18
