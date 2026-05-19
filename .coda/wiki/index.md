@@ -102,3 +102,4 @@ When in doubt: date-prefix it.
 - [[flag-no-auth]] — `current_staff()` hardcodes id=1; no auth at all. Out of scope to fix, worth naming.
 - [[flag-token-in-url-via-host-header]] — `share.php` uses `$_SERVER['HTTP_HOST']` for the share URL; host-header trust is technically a bug, worth flagging.
 - [[flag-no-share-revocation]] — shares table has no `revoked_at`. Customers will ask. Out of scope here.
+- [[flag-audit-coverage-partial]] — audit_log covers creation + share actions; "scheduling changes" only logged at create-time because no reschedule UI. Resurface for video.
