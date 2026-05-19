@@ -25,9 +25,10 @@ function generate_readable_id(string $title): string {
         $slug = 'doc';
     }
 
+    $alphabetMax = strlen(READABLE_ID_ALPHABET) - 1;
     $suffix = '';
     for ($i = 0; $i < 4; $i++) {
-        $suffix .= READABLE_ID_ALPHABET[random_int(0, 29)];
+        $suffix .= READABLE_ID_ALPHABET[random_int(0, $alphabetMax)];
     }
 
     return "{$slug}-{$suffix}";
