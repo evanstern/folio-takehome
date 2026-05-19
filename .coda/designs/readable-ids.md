@@ -118,6 +118,32 @@ Collision strategy: `generate_readable_id_unique` calls
 result; retries up to 5 times with fresh suffixes; throws on persistent
 collision (statistically impossible but defensive).
 
+### Alternative we considered: time-shaped IDs
+
+In PR review Evan explicitly raised whether something like
+`MM-DD-YYYY-HHMM` would be a better "human-readable" shape.
+
+Design answer: **not as the default.** If the ID itself encodes time,
+we immediately inherit uniqueness and timezone questions:
+
+- minute-granularity timestamps collide unless we add seconds or a suffix
+- the identifier starts carrying timezone semantics
+- `MM-DD-YYYY` is readable to US eyes but not especially sortable or
+  universal
+- timestamp-heavy IDs lose title context unless combined with the slug,
+  at which point they are longer than the chosen shape
+
+If Folio ever wants chronological meaning inside the identifier, the
+best version is not a bare timestamp but a hybrid like
+`<slug>-YYYYMMDD-HHMM-<2-4 char suffix>`.
+
+Example:
+- `welcome-packet-20260518-2014-7q`
+
+That keeps title context and uniqueness, but it's a larger, less sayable
+identifier than `slug-4char`. For this exercise the chosen shape stays
+the best balance.
+
 ## Audit-log impact
 
 Per [[2026-05-18-1600-pattern-audit-log]]:
@@ -152,6 +178,10 @@ Captured in [[2026-05-18-1640-decision-readable-ids-complement]]:
 - **UUID v4 / nanoid** — not human-sayable
 - **Pure slug, no suffix** — collision risk for duplicate titles
 - **`FOLIO-XXXX` style (no title context)** — loses scanability in a list
+- **Timestamp-shaped IDs** (`MM-DD-YYYY-HHMM`, `YYYYMMDD-HHMM`) —
+  readable, but weak on uniqueness unless paired with a suffix, heavier
+  on timezone assumptions, and worse than `slug-4char` at preserving
+  title context in a short ID.
 - **Longer suffix (6-8 chars)** — sufficient space with 4 chars at
   this scale (30⁴ ≈ 810K per slug)
 - **Numeric suffix** — harder to say out loud
@@ -161,6 +191,10 @@ Captured in [[2026-05-18-1640-decision-readable-ids-complement]]:
 
 - "Customers said 'short, readable, sayable.' I shipped slug + 4-char
   base32. Readable, sayable, collision-resistant without going UUID."
+- "We considered more human-meaningful time-shaped IDs like
+  `MM-DD-YYYY-HHMM`, but those either collide or drag timezone semantics
+  into the identifier. If we ever want that product feel, the right
+  shape is a hybrid like `slug-YYYYMMDD-HHMM-7q`, not a bare timestamp."
 - "The privacy call was complement vs replace. Replacing share tokens
   with readable IDs means anyone who guesses or hears a readable ID
   can read the doc. The complement design preserves the existing

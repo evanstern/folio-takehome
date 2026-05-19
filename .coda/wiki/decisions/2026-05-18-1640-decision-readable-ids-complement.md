@@ -45,12 +45,39 @@ Examples: `welcome-packet-7qx4`, `onboarding-3kma`, `untitled-2bxv`.
 - Not guessable (4-char suffix is the privacy floor).
 - Distinct from share tokens (which are 32 hex chars and recipient-bound).
 
+### Why not time-based readable IDs?
+
+Evan explicitly raised a timestamp-shaped alternative in PR review:
+`MM-DD-YYYY-HHMM` (or equivalent) is human-readable and typeable.
+
+We considered the broader class of time-based IDs and rejected them as
+the default shape for this take-home:
+
+- **Plain timestamps are not unique enough** at minute granularity.
+  Two docs created in the same minute collide unless we add seconds or a
+  suffix.
+- **Timestamps drag timezone semantics into the identifier.** The moment
+  the ID encodes creation time, readers start asking which timezone it is
+  in and whether the value is stable across environments.
+- **`MM-DD-YYYY` is a US-centric formatting habit**, not a universally
+  clear or sortable date shape.
+- **Timestamp-heavy IDs lose title context** unless combined with the
+  slug, at which point they become longer than the current shape.
+
+The strongest time-based alternative would be something like
+`<slug>-YYYYMMDD-HHMM-<2-4 char suffix>` — e.g.
+`welcome-packet-20260518-2014-7q`. That's defensible if the product
+needs chronological meaning inside the ID itself. For this exercise,
+though, `slug-4char` is the better balance of shortness, sayability,
+title-context, and collision-resistance.
+
 ## Rejected alternatives
 
 - **Replace share tokens.** Breaks the link-permanence + privacy tradeoff. A readable ID is, by design, more guessable than a hex token. Without a token gate, anyone who knows a doc's slug could view it. Hard no.
 - **Pure auto-incrementing word lists** (correct-horse-battery-staple style). Cute, but longer to type and not derived from the title — less "human-readable in context."
 - **UUIDs.** Not readable.
 - **User-chosen IDs.** Allows collisions and ugly conflicts. Out of scope to design the UX.
+- **Plain timestamp IDs** (`MM-DD-YYYY-HHMM`, `YYYYMMDD-HHMM`, etc.). Readable, but weak on uniqueness without extra suffixes, heavier on timezone assumptions, and worse at preserving title context than `slug-4char`.
 
 ## Trade-offs accepted
 
@@ -66,6 +93,12 @@ Examples: `welcome-packet-7qx4`, `onboarding-3kma`, `untitled-2bxv`.
 - "The 4-character suffix is the collision avoidance AND the privacy floor.
   Drop it and you have a guessable URL. Make it longer and it stops being
   readable."
+- "We explicitly considered time-based IDs because they're human-readable
+  in a different way (`MM-DD-YYYY-HHMM` / `YYYYMMDD-HHMM`). Rejected
+  them as the default because they either collide or drag timezone and
+  formatting assumptions into the identifier. If we ever want that
+  product feel, the right shape is `slug-YYYYMMDD-HHMM-7q`, not a bare
+  timestamp."
 
 ## Related
 - [[folio-schema]]
