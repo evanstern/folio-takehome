@@ -1,7 +1,7 @@
 <?php
 
-require __DIR__ . '/../lib/bootstrap.php';
-require __DIR__ . '/../lib/layout.php';
+require_once __DIR__ . '/../lib/bootstrap.php';
+require_once __DIR__ . '/../lib/layout.php';
 
 $token = $_GET['token'] ?? '';
 
@@ -21,6 +21,24 @@ if (!$doc) {
     <div class="centered-message">
         <h1>Share link not found</h1>
         <p>The link you used is invalid or has been removed.</p>
+    </div>
+    <?php
+    render_footer();
+    exit;
+}
+
+$nowUtc = gmdate('Y-m-d H:i:s');
+if (!empty($doc['publish_at']) && $doc['publish_at'] > $nowUtc) {
+    $publishDt = new DateTime($doc['publish_at'], new DateTimeZone('UTC'));
+    $publishDt->setTimezone(new DateTimeZone(date_default_timezone_get()));
+    $display = $publishDt->format('M j, Y \a\t g:i A T');
+
+    render_header('Not yet available');
+    ?>
+    <div class="centered-message">
+        <h1>Not yet available</h1>
+        <p>This document will be visible on <strong><?= h($display) ?></strong>.</p>
+        <p class="meta">Check back then with the same link.</p>
     </div>
     <?php
     render_footer();

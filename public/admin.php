@@ -9,18 +9,30 @@ $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $body = trim($_POST['body'] ?? '');
+    $rawPublishAt = trim($_POST['publish_at'] ?? '');
 
     if ($title === '' || $body === '') {
         $error = 'Title and body are required.';
     } else {
+        if ($rawPublishAt === '') {
+            $publishAt = null;
+        } else {
+            $dt = new DateTime($rawPublishAt);
+            $dt->setTimezone(new DateTimeZone('UTC'));
+            $publishAt = $dt->format('Y-m-d H:i:s');
+        }
+
         $stmt = db()->prepare('
-            INSERT INTO documents (title, body, created_by)
-            VALUES (?, ?, ?)
+            INSERT INTO documents (title, body, created_by, publish_at)
+            VALUES (?, ?, ?, ?)
         ');
-        $stmt->execute([$title, $body, $staff['id']]);
+        $stmt->execute([$title, $body, $staff['id'], $publishAt]);
         $docId = (int) db()->lastInsertId();
 
-        audit_log('create', 'document', $docId, ['title' => $title]);
+        audit_log('create', 'document', $docId, [
+            'title' => $title,
+            'publish_at' => $publishAt,
+        ]);
 
         header('Location: /admin.php?created=' . $docId);
         exit;
@@ -58,6 +70,10 @@ render_header('Admin', $staff);
         <div class="form-field">
             <label for="body">Body</label>
             <textarea id="body" name="body" required></textarea>
+        </div>
+        <div class="form-field">
+            <label for="publish_at">Publish at <span class="muted">(optional, <?= h(date_default_timezone_get()) ?>)</span></label>
+            <input type="datetime-local" id="publish_at" name="publish_at">
         </div>
         <button type="submit" class="btn">Create document</button>
     </form>
