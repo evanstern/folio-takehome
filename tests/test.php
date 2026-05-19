@@ -73,6 +73,10 @@ function run_php_script(array $args): string {
 }
 
 function make_doc_with_publish_at(?string $publishAtUtc, string $title, string $body): string {
+    return make_doc_full($publishAtUtc, $title, $body)['token'];
+}
+
+function make_doc_full(?string $publishAtUtc, string $title, string $body): array {
     $rid = generate_readable_id_unique(db(), $title);
     $stmt = db()->prepare('
         INSERT INTO documents (title, body, created_by, publish_at, readable_id)
@@ -86,7 +90,15 @@ function make_doc_with_publish_at(?string $publishAtUtc, string $title, string $
         VALUES (?, ?, ?)
     ');
     $stmt->execute([$docId, $token, 'r@example.com']);
-    return $token;
+    return ['readable_id' => $rid, 'token' => $token];
+}
+
+function render_view_for_rid_and_token(string $rid, string $token): string {
+    $script = __DIR__ . '/../public/view.php';
+    $code = '$_GET = ["d" => ' . var_export($rid, true) . ', "token" => ' . var_export($token, true) . '];'
+        . '$_SERVER["REQUEST_METHOD"] = "GET";'
+        . 'include ' . var_export($script, true) . ';';
+    return run_php_script(['-d', 'auto_prepend_file=', '-r', $code]);
 }
 
 echo "\nRunning tests:\n";
@@ -271,6 +283,20 @@ test('audit_log on create includes publish_at', function () {
     $publishAt = $docStmt->fetchColumn();
     assert_true($publishAt !== false, 'expected created document row');
     assert_true($details['publish_at'] === $publishAt, 'audit payload matches stored publish_at');
+});
+
+test('readable_id url respects publish_at gate (cross-feature)', function () {
+    $future = gmdate('Y-m-d H:i:s', time() + 3600);
+    $futureDoc = make_doc_full($future, 'Future Readable Doc', 'embargoed payload xyz');
+    $html = render_view_for_rid_and_token($futureDoc['readable_id'], $futureDoc['token']);
+    assert_true(str_contains($html, 'Not yet available'), 'd= URL must hit the gate for future docs');
+    assert_true(!str_contains($html, 'embargoed payload xyz'), 'body must not leak via the d= URL pre-publish');
+
+    $past = gmdate('Y-m-d H:i:s', time() - 3600);
+    $pastDoc = make_doc_full($past, 'Past Readable Doc', 'visible body abc');
+    $html = render_view_for_rid_and_token($pastDoc['readable_id'], $pastDoc['token']);
+    assert_true(str_contains($html, 'visible body abc'), 'past-published doc should render via d= URL');
+    assert_true(!str_contains($html, 'Not yet available'), 'gate must not trigger for past docs');
 });
 
 test('invalid publish_at shows validation error instead of fataling', function () {
