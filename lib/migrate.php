@@ -4,6 +4,8 @@
  * Apply pending SQL migrations from $migrationsDir against $db.
  *
  * Behavior:
+ *  - Validates $migrationsDir is an actual directory; throws if not.
+ *    An empty directory is a valid no-op.
  *  - Forces PDO::ERRMODE_EXCEPTION for the duration of the call so
  *    SQL errors raise instead of returning false (and being silently
  *    recorded as applied). Prior error mode is restored before return.
@@ -11,13 +13,20 @@
  *  - Discovers *.sql files in $migrationsDir, sorted lexicographically.
  *  - For each file not already recorded in schema_migrations, runs it
  *    inside a transaction and records the basename on success. On
- *    failure, rolls back and rethrows with file context.
+ *    failure, rolls back (only if still in a transaction) and rethrows
+ *    with file context.
  *
  * Returns ['applied' => [...basenames], 'skipped' => [...basenames]].
  *
  * Per .coda/designs/migrations-infra.md.
  */
 function migrate(PDO $db, string $migrationsDir): array {
+    if (!is_dir($migrationsDir)) {
+        throw new RuntimeException(
+            "migrations directory not found: {$migrationsDir}"
+        );
+    }
+
     $priorErrMode = $db->getAttribute(PDO::ATTR_ERRMODE);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -53,14 +62,20 @@ function migrate(PDO $db, string $migrationsDir): array {
                     "migration {$basename} failed: could not read file {$file}"
                 );
             }
-            $db->beginTransaction();
             try {
+                $db->beginTransaction();
                 $db->exec($sql);
                 $stmt = $db->prepare('INSERT INTO schema_migrations (version) VALUES (?)');
                 $stmt->execute([$basename]);
                 $db->commit();
             } catch (Throwable $e) {
-                $db->rollBack();
+                // Guard rollBack: if beginTransaction() threw (caller
+                // already had an active txn) or commit() failed (txn
+                // already closed), rollBack() would throw and mask the
+                // original error.
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
                 throw new RuntimeException(
                     "migration {$basename} failed: " . $e->getMessage(),
                     0,
