@@ -28,7 +28,7 @@ if (!$doc) {
 }
 
 $nowUtc = gmdate('Y-m-d H:i:s');
-if (!empty($doc['publish_at']) && $doc['publish_at'] > $nowUtc) {
+if ($doc['publish_at'] !== null && $doc['publish_at'] > $nowUtc) {
     $publishDt = new DateTime($doc['publish_at'], new DateTimeZone('UTC'));
     $publishDt->setTimezone(new DateTimeZone(date_default_timezone_get()));
     $display = $publishDt->format('M j, Y \a\t g:i A T');

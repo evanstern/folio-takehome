@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $body = trim($_POST['body'] ?? '');
     $rawPublishAt = trim($_POST['publish_at'] ?? '');
+    $publishAt = null;
 
     if ($title === '' || $body === '') {
         $error = 'Title and body are required.';
@@ -17,25 +18,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($rawPublishAt === '') {
             $publishAt = null;
         } else {
-            $dt = new DateTime($rawPublishAt);
-            $dt->setTimezone(new DateTimeZone('UTC'));
-            $publishAt = $dt->format('Y-m-d H:i:s');
+            try {
+                $dt = new DateTime($rawPublishAt);
+                $dt->setTimezone(new DateTimeZone('UTC'));
+                $publishAt = $dt->format('Y-m-d H:i:s');
+            } catch (Exception $e) {
+                $error = 'Publish time must be a valid date and time.';
+            }
         }
 
-        $stmt = db()->prepare('
-            INSERT INTO documents (title, body, created_by, publish_at)
-            VALUES (?, ?, ?, ?)
-        ');
-        $stmt->execute([$title, $body, $staff['id'], $publishAt]);
-        $docId = (int) db()->lastInsertId();
+        if ($error === null) {
+            $stmt = db()->prepare('
+                INSERT INTO documents (title, body, created_by, publish_at)
+                VALUES (?, ?, ?, ?)
+            ');
+            $stmt->execute([$title, $body, $staff['id'], $publishAt]);
+            $docId = (int) db()->lastInsertId();
 
-        audit_log('create', 'document', $docId, [
-            'title' => $title,
-            'publish_at' => $publishAt,
-        ]);
+            audit_log('create', 'document', $docId, [
+                'title' => $title,
+                'publish_at' => $publishAt,
+            ]);
 
-        header('Location: /admin.php?created=' . $docId);
-        exit;
+            header('Location: /admin.php?created=' . $docId);
+            exit;
+        }
     }
 }
 
