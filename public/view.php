@@ -38,6 +38,24 @@ if (!$doc) {
     exit;
 }
 
+$nowUtc = gmdate('Y-m-d H:i:s');
+if ($doc['publish_at'] !== null && $doc['publish_at'] > $nowUtc) {
+    $publishDt = new DateTime($doc['publish_at'], new DateTimeZone('UTC'));
+    $publishDt->setTimezone(new DateTimeZone(date_default_timezone_get()));
+    $display = $publishDt->format('M j, Y \a\t g:i A T');
+
+    render_header('Not yet available');
+    ?>
+    <div class="centered-message">
+        <h1>Not yet available</h1>
+        <p>This document will be visible on <strong><?= h($display) ?></strong>.</p>
+        <p class="meta">Check back then with the same link.</p>
+    </div>
+    <?php
+    render_footer();
+    exit;
+}
+
 render_header($doc['title']);
 ?>
 

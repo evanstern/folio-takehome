@@ -30,6 +30,65 @@ function assert_true($cond, string $msg = ''): void {
     }
 }
 
+function render_view_for_token(string $token): string {
+    $script = __DIR__ . '/../public/view.php';
+    $code = '$_GET = ["token" => ' . var_export($token, true) . '];'
+        . '$_SERVER["REQUEST_METHOD"] = "GET";'
+        . 'include ' . var_export($script, true) . ';';
+    return run_php_script(['-d', 'auto_prepend_file=', '-r', $code]);
+}
+
+function post_admin_create_document(string $title, string $body, string $publishAt = ''): string {
+    $script = __DIR__ . '/../public/admin.php';
+    $code = '$_SERVER["REQUEST_METHOD"] = "POST";'
+        . '$_POST = ['
+        . '"title" => ' . var_export($title, true) . ','
+        . '"body" => ' . var_export($body, true) . ','
+        . '"publish_at" => ' . var_export($publishAt, true)
+        . '];'
+        . 'include ' . var_export($script, true) . ';';
+    return run_php_script(['-d', 'auto_prepend_file=', '-r', $code]);
+}
+
+function run_php_script(array $args): string {
+    $command = array_merge(['php'], $args);
+    $descriptors = [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open($command, $descriptors, $pipes, dirname(__DIR__));
+    assert_true(is_resource($proc), 'expected php subprocess to start');
+
+    fclose($pipes[0]);
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $status = proc_close($proc);
+
+    assert_true($status === 0, 'php subprocess failed: ' . trim($stderr));
+
+    return $stdout;
+}
+
+function make_doc_with_publish_at(?string $publishAtUtc, string $title, string $body): string {
+    $rid = generate_readable_id_unique(db(), $title);
+    $stmt = db()->prepare('
+        INSERT INTO documents (title, body, created_by, publish_at, readable_id)
+        VALUES (?, ?, 1, ?, ?)
+    ');
+    $stmt->execute([$title, $body, $publishAtUtc, $rid]);
+    $docId = (int) db()->lastInsertId();
+    $token = random_token();
+    $stmt = db()->prepare('
+        INSERT INTO shares (document_id, token, recipient_email)
+        VALUES (?, ?, ?)
+    ');
+    $stmt->execute([$docId, $token, 'r@example.com']);
+    return $token;
+}
+
 echo "\nRunning tests:\n";
 
 test('seeded share link resolves to the seeded document', function () {
@@ -62,7 +121,6 @@ test('migrate() applies pending migrations and skips applied ones', function () 
         assert_true(count($result1['skipped']) === 0, 'first run skips nothing');
         assert_true($result1['applied'][0] === '0001_test.sql', 'first run records basename');
 
-        // Verify the migration SQL actually executed, not just got recorded.
         $tableExists = (bool) $db->query(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='test_table'"
         )->fetchColumn();
@@ -153,6 +211,74 @@ test('audit_log on doc create includes readable_id', function () {
         "audit readable_id wrong format: " . $details['readable_id']
     );
     assert_true($details['readable_id'] === $rid, 'audit readable_id does not match generated');
+});
+
+test('future publish_at blocks recipient view', function () {
+    $future = gmdate('Y-m-d H:i:s', time() + 3600);
+    $token = make_doc_with_publish_at($future, 'Future Doc', 'secret body here');
+    $html = render_view_for_token($token);
+    assert_true(str_contains($html, 'Not yet available'), 'expected gate page');
+    assert_true(!str_contains($html, 'secret body here'), 'body must not leak pre-publish');
+});
+
+test('past publish_at allows recipient view', function () {
+    $past = gmdate('Y-m-d H:i:s', time() - 3600);
+    $token = make_doc_with_publish_at($past, 'Past Doc', 'visible body content');
+    $html = render_view_for_token($token);
+    assert_true(str_contains($html, 'visible body content'), 'body should render');
+    assert_true(!str_contains($html, 'Not yet available'), 'gate must not trigger');
+});
+
+test('null publish_at allows recipient view (back-compat)', function () {
+    $stmt = db()->prepare('
+        SELECT s.token, d.body
+        FROM shares s
+        JOIN documents d ON d.id = s.document_id
+        WHERE d.publish_at IS NULL
+        LIMIT 1
+    ');
+    $stmt->execute();
+    $row = $stmt->fetch();
+    assert_true($row !== false, 'expected a seeded share with NULL publish_at');
+    $html = render_view_for_token($row['token']);
+    assert_true(str_contains($html, 'Welcome to Folio'), 'seeded body should render');
+    assert_true(!str_contains($html, 'Not yet available'), 'gate must not trigger');
+});
+
+test('audit_log on create includes publish_at', function () {
+    $futureLocal = date('Y-m-d\TH:i', time() + 7200);
+    post_admin_create_document('Audited Doc', 'body', $futureLocal);
+
+    $stmt = db()->prepare('
+        SELECT d.id, a.details
+        FROM documents d
+        JOIN audit_log a
+          ON a.entity_type = ?
+         AND a.entity_id = d.id
+         AND a.action = ?
+        WHERE d.title = ?
+        ORDER BY d.id DESC
+        LIMIT 1
+    ');
+    $stmt->execute(['document', 'create', 'Audited Doc']);
+    $row = $stmt->fetch();
+    assert_true($row !== false, 'expected created doc and matching audit_log row');
+    $details = json_decode($row['details'], true);
+    assert_true(is_array($details), 'details should be JSON object');
+    assert_true(array_key_exists('publish_at', $details), 'publish_at key present');
+    $docStmt = db()->prepare('SELECT publish_at FROM documents WHERE id = ?');
+    $docStmt->execute([(int) $row['id']]);
+    $publishAt = $docStmt->fetchColumn();
+    assert_true($publishAt !== false, 'expected created document row');
+    assert_true($details['publish_at'] === $publishAt, 'audit payload matches stored publish_at');
+});
+
+test('invalid publish_at shows validation error instead of fataling', function () {
+    $html = post_admin_create_document('Broken Schedule', 'body', 'not-a-datetime');
+    assert_true(str_contains($html, 'Publish time must be a valid date and time.'), 'expected validation message');
+    $stmt = db()->prepare('SELECT COUNT(*) FROM documents WHERE title = ?');
+    $stmt->execute(['Broken Schedule']);
+    assert_true((int) $stmt->fetchColumn() === 0, 'invalid publish_at must not create a document');
 });
 
 echo "\n{$pass} passed, {$fail} failed.\n";

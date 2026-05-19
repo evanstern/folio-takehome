@@ -9,25 +9,42 @@ $error = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $body = trim($_POST['body'] ?? '');
+    $rawPublishAt = trim($_POST['publish_at'] ?? '');
+    $publishAt = null;
 
     if ($title === '' || $body === '') {
         $error = 'Title and body are required.';
     } else {
-        $readableId = generate_readable_id_unique(db(), $title);
-        $stmt = db()->prepare('
-            INSERT INTO documents (title, body, created_by, readable_id)
-            VALUES (?, ?, ?, ?)
-        ');
-        $stmt->execute([$title, $body, $staff['id'], $readableId]);
-        $docId = (int) db()->lastInsertId();
+        if ($rawPublishAt === '') {
+            $publishAt = null;
+        } else {
+            try {
+                $dt = new DateTime($rawPublishAt);
+                $dt->setTimezone(new DateTimeZone('UTC'));
+                $publishAt = $dt->format('Y-m-d H:i:s');
+            } catch (Exception $e) {
+                $error = 'Publish time must be a valid date and time.';
+            }
+        }
 
-        audit_log('create', 'document', $docId, [
-            'title' => $title,
-            'readable_id' => $readableId,
-        ]);
+        if ($error === null) {
+            $readableId = generate_readable_id_unique(db(), $title);
+            $stmt = db()->prepare('
+                INSERT INTO documents (title, body, created_by, publish_at, readable_id)
+                VALUES (?, ?, ?, ?, ?)
+            ');
+            $stmt->execute([$title, $body, $staff['id'], $publishAt, $readableId]);
+            $docId = (int) db()->lastInsertId();
 
-        header('Location: /admin.php?created=' . $docId);
-        exit;
+            audit_log('create', 'document', $docId, [
+                'title' => $title,
+                'publish_at' => $publishAt,
+                'readable_id' => $readableId,
+            ]);
+
+            header('Location: /admin.php?created=' . $docId);
+            exit;
+        }
     }
 }
 
@@ -62,6 +79,10 @@ render_header('Admin', $staff);
         <div class="form-field">
             <label for="body">Body</label>
             <textarea id="body" name="body" required></textarea>
+        </div>
+        <div class="form-field">
+            <label for="publish_at">Publish at <span class="muted">(optional, <?= h(date_default_timezone_get()) ?>)</span></label>
+            <input type="datetime-local" id="publish_at" name="publish_at">
         </div>
         <button type="submit" class="btn">Create document</button>
     </form>
